@@ -1,0 +1,35 @@
+{
+  "project": "密网巡哨 TrafficVigil",
+  "batch_id": "TV-0427",
+  "source_file": "campus-gateway-2026-05-05.pcapng",
+  "summary": {
+    "packets": 18420,
+    "sessions": 1276,
+    "encrypted_ratio": 0.69,
+    "success_rate": 0.94,
+    "first_packet_latency_ms": 0.38,
+    "throughput_gbps": 6.32
+  },
+  "classification": {
+    "normal": 0.31,
+    "vpn": 0.27,
+    "sim": 0.42,
+    "apps": {
+      "Telegram": 0.86,
+      "WhatsApp": 0.64,
+      "Signal": 0.57,
+      "WeChat": 0.48
+    }
+  },
+  "behavior": {
+    "chat": 0.92,
+    "file": 0.78,
+    "photo": 0.66,
+    "video": 0.41
+  },
+  "attribution": {
+    "group_accuracy": 0.894,
+    "high_risk_channels": 17,
+    "cross_device_links": 42
+  }
+}

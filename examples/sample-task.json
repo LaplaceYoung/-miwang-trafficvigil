@@ -1,0 +1,21 @@
+{
+  "task_id": "trafficvigil-case-001",
+  "input": {
+    "mode": "pcap_upload",
+    "pcap_path": "data/input/campus-gateway-2026-05-05.pcapng",
+    "target_apps": ["Telegram", "WhatsApp", "Signal"],
+    "protocols": ["TLS1.3", "QUIC", "WireGuard"]
+  },
+  "pipeline": [
+    "capture",
+    "vpn_classification",
+    "sim_classification",
+    "behavior_sniffing",
+    "group_attribution",
+    "report_generation"
+  ],
+  "output": {
+    "report_path": "data/output/reports/trafficvigil-case-001.json",
+    "dashboard_url": "/#overview"
+  }
+}

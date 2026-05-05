@@ -1,0 +1,14 @@
+[project]
+name = "trafficvigil"
+version = "1.0.0"
+description = "Encrypted traffic recognition and attribution system for TrafficVigil."
+requires-python = ">=3.10"
+authors = [{ name = "TrafficVigil Team" }]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
