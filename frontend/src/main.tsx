@@ -41,6 +41,7 @@ function App() {
         <Route path="/reports" element={<Guarded><ReportsPage /></Guarded>} />
         <Route path="/model" element={<Guarded><ModelPage /></Guarded>} />
         <Route path="/settings" element={<Guarded><SettingsPage /></Guarded>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

@@ -67,7 +67,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className={`console-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
       <aside className="console-sidebar">
         <NavLink to="/dashboard" className="console-brand">
-          <span>巡</span>
+          <span><ShieldCheck size={24} /></span>
           <strong>TrafficVigil</strong>
           <small>密网巡哨安全分析控制台</small>
         </NavLink>

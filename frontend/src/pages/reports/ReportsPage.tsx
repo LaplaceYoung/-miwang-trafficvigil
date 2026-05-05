@@ -11,16 +11,36 @@ import { useUiStore } from "../../store/uiStore";
 export function ReportsPage() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(historyTasks[0].taskId);
+  const [filter, setFilter] = useState<"all" | "high" | "completed">("all");
+  const [page, setPage] = useState(1);
   const setToast = useUiStore((state) => state.setToast);
+
+  const riskForIndex = (index: number): RiskLevel => (index === 0 ? "critical" : index === 1 ? "high" : "medium");
+
   const filteredTasks = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-    if (!keyword) return historyTasks;
-    return historyTasks.filter((task) =>
-      [task.taskId, task.taskName, task.fileName, task.status].some((value) => value.toLowerCase().includes(keyword))
-    );
-  }, [query]);
+    return historyTasks.filter((task, index) => {
+      const matchesKeyword = !keyword || [task.taskId, task.taskName, task.fileName, task.status].some((value) => value.toLowerCase().includes(keyword));
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "high" && ["critical", "high"].includes(riskForIndex(index))) ||
+        (filter === "completed" && task.status === "success");
+      return matchesKeyword && matchesFilter;
+    });
+  }, [query, filter]);
+
+  const pageSize = 3;
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageTasks = filteredTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const selected = filteredTasks.find((task) => task.taskId === selectedId) ?? filteredTasks[0] ?? historyTasks[0];
   const selectedRisk: RiskLevel = selected.groupMatch[0]?.riskLevel ?? "medium";
+
+  const setReportFilter = (nextFilter: typeof filter) => {
+    setFilter(nextFilter);
+    setPage(1);
+    setToast(nextFilter === "all" ? "报告筛选：全部" : nextFilter === "high" ? "报告筛选：高风险" : "报告筛选：已完成");
+  };
 
   const exportRows = (task: AnalysisTask) => [
     ["task", task.taskId],
@@ -42,20 +62,32 @@ export function ReportsPage() {
       <section className="report-layout rich-report">
         <aside className="panel report-sidebar">
           <div className="panel-title"><h2>报告列表</h2><span>{filteredTasks.length} reports</span></div>
-          <label className="search-box"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索报告编号、任务名或文件名" /></label>
-          <div className="segmented"><button className="active" onClick={() => setToast("报告筛选：全部")}>全部</button><button onClick={() => setToast("报告筛选：高风险")}>高风险</button><button onClick={() => setToast("报告筛选：已完成")}>已完成</button></div>
+          <label className="search-box"><Search size={16} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="搜索报告编号、任务名或文件名" /></label>
+          <div className="segmented">
+            <button className={filter === "all" ? "active" : ""} onClick={() => setReportFilter("all")}>全部</button>
+            <button className={filter === "high" ? "active" : ""} onClick={() => setReportFilter("high")}>高风险</button>
+            <button className={filter === "completed" ? "active" : ""} onClick={() => setReportFilter("completed")}>已完成</button>
+          </div>
           <div className="report-card-list">
-            {filteredTasks.map((task, index) => (
+            {pageTasks.map((task) => {
+              const index = historyTasks.findIndex((item) => item.taskId === task.taskId);
+              const risk = riskForIndex(index);
+              return (
               <button key={task.taskId} className={task.taskId === selected.taskId ? "active" : ""} onClick={() => { setSelectedId(task.taskId); setToast(`${task.taskName} 报告已载入`); }}>
                 <span>RPT-{task.taskId.slice(-4)}</span>
                 <strong>{task.taskName}</strong>
                 <small>{task.fileName}</small>
                 <em>{task.createdAt}</em>
-                <b className={`risk-chip ${index === 0 ? "risk-critical" : index === 1 ? "risk-high" : "risk-medium"}`}>{index === 0 ? "极高" : index === 1 ? "高" : "中"}</b>
+                <b className={`risk-chip ${riskClass(risk)}`}>{risk === "critical" ? "极高" : risk === "high" ? "高" : "中"}</b>
               </button>
-            ))}
+            );})}
           </div>
-          <div className="pagination-row"><button className="icon-button">1</button><button className="icon-button">2</button><button className="icon-button">3</button><span>共 100 页</span></div>
+          <div className="pagination-row">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button key={pageNumber} className={`icon-button ${pageNumber === currentPage ? "active" : ""}`} onClick={() => { setPage(pageNumber); setToast(`已切换到第 ${pageNumber} 页`); }}>{pageNumber}</button>
+            ))}
+            <span>第 {currentPage} / {totalPages} 页</span>
+          </div>
         </aside>
         <article className="report-preview">
           <header><span>TrafficVigil Report</span><strong>{selected.taskId}</strong></header>

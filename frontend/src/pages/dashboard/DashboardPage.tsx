@@ -1,3 +1,4 @@
+import { Activity, FileArchive, Gauge, ShieldCheck, Target, UsersRound } from "lucide-react";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { BarChart, DonutChart, LineAreaChart, MiniSparkline } from "../../components/charts/Charts";
 import { LivePacketStream } from "../../components/charts/LivePacketStream";
@@ -11,12 +12,12 @@ import { useUiStore } from "../../store/uiStore";
 export function DashboardPage() {
   const setToast = useUiStore((state) => state.setToast);
   const metrics = [
-    { label: "今日分析任务", value: "1,246", delta: "较昨日 ↑ 18.6%", color: "var(--blue)", series: [18, 24, 19, 31, 28, 35, 38, 32, 41, 39] },
-    { label: "已处理 PCAP 文件", value: "3,782", delta: "较昨日 ↑ 22.4%", color: "var(--violet)", series: [20, 18, 26, 23, 31, 27, 34, 29, 36, 33] },
-    { label: "混合流量识别成功率", value: "94%", delta: "较昨日 ↑ 2.1%", color: "var(--cyan)", series: [81, 84, 86, 85, 89, 90, 88, 93, 91, 94] },
-    { label: "SIM 提取准确率", value: "98.7%", delta: "较昨日 ↑ 1.3%", color: "var(--green)", series: [91, 93, 94, 96, 95, 97, 96, 98, 97, 99] },
-    { label: "行为分析准确率", value: "90.2%", delta: "较昨日 ↑ 1.8%", color: "var(--blue)", series: [76, 78, 82, 80, 86, 84, 88, 87, 91, 90] },
-    { label: "群组匹配准确率", value: "89.4%", delta: "较昨日 ↑ 1.6%", color: "var(--violet)", series: [70, 74, 73, 79, 82, 81, 85, 84, 88, 89] }
+    { label: "今日分析任务", value: "1,246", delta: "较昨日 ↑ 18.6%", color: "var(--blue)", series: [18, 24, 19, 31, 28, 35, 38, 32, 41, 39], icon: Activity },
+    { label: "已处理 PCAP 文件", value: "3,782", delta: "较昨日 ↑ 22.4%", color: "var(--violet)", series: [20, 18, 26, 23, 31, 27, 34, 29, 36, 33], icon: FileArchive },
+    { label: "混合流量识别成功率", value: "94%", delta: "较昨日 ↑ 2.1%", color: "var(--cyan)", series: [81, 84, 86, 85, 89, 90, 88, 93, 91, 94], icon: Target },
+    { label: "SIM 提取准确率", value: "98.7%", delta: "较昨日 ↑ 1.3%", color: "var(--green)", series: [91, 93, 94, 96, 95, 97, 96, 98, 97, 99], icon: ShieldCheck },
+    { label: "行为分析准确率", value: "90.2%", delta: "较昨日 ↑ 1.8%", color: "var(--blue)", series: [76, 78, 82, 80, 86, 84, 88, 87, 91, 90], icon: Gauge },
+    { label: "群组匹配准确率", value: "89.4%", delta: "较昨日 ↑ 1.6%", color: "var(--violet)", series: [70, 74, 73, 79, 82, 81, 85, 84, 88, 89], icon: UsersRound }
   ];
 
   return (
@@ -28,14 +29,17 @@ export function DashboardPage() {
         action={<div className="page-actions"><button className="secondary-button" onClick={() => setToast("已切换到今日数据视图")}>今日 2026-05-05</button><button className="secondary-button" onClick={() => setToast("数据中心指标已刷新")}>刷新</button></div>}
       />
       <section className="metric-grid six">
-        {metrics.map((metric) => (
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+          return (
           <article key={metric.label} className="metric-card">
+            <Icon className="metric-icon" size={20} />
             <span>{metric.label}</span>
             <strong>{metric.value}</strong>
             <em>{metric.delta}</em>
             <MiniSparkline values={metric.series} color={metric.color} />
           </article>
-        ))}
+        );})}
       </section>
 
       <section className="dashboard-grid">
