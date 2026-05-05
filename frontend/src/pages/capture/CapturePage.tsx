@@ -1,5 +1,6 @@
 import { Copy, Download, Pause, Play, Square } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { GaugeRing } from "../../components/charts/Charts";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { PacketTable } from "../../components/tables/DataTables";
@@ -10,6 +11,7 @@ import { formatBytes } from "../../utils/riskLevel";
 export function CapturePage() {
   const { task, packets, uploadProgress, captureRunning, simulateCapture } = useAnalysisStore();
   const setToast = useUiStore((state) => state.setToast);
+  const navigate = useNavigate();
   const [fileName, setFileName] = useState(task.fileName);
   const [mode, setMode] = useState<"upload" | "realtime">("upload");
 
@@ -77,7 +79,7 @@ export function CapturePage() {
             <div><dt>数据源</dt><dd>WLAN (10.24.0.42)</dd></div>
             <div><dt>协议过滤</dt><dd>TCP / UDP / TLS 1.3 / QUIC</dd></div>
           </dl>
-          <button className="primary-button full" onClick={() => setToast("已准备进入综合检测工作台")}>进入综合检测</button>
+          <button className="primary-button full" onClick={() => { setToast("已进入综合检测工作台"); navigate("/workspace"); }}>进入综合检测</button>
         </aside>
       </section>
       <section className="panel packet-stats">

@@ -1939,6 +1939,20 @@ tbody tr {
   align-items: start;
 }
 
+.report-layout.rich-report.preview-expanded {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.report-layout.rich-report.preview-expanded .report-sidebar,
+.report-layout.rich-report.preview-expanded > aside:last-child {
+  display: none;
+}
+
+.report-layout.rich-report.preview-expanded .report-preview {
+  max-width: min(1080px, 100%);
+  justify-self: center;
+}
+
 .report-sidebar {
   display: grid;
   gap: 12px;

@@ -1,4 +1,5 @@
 import { FileText, PlayCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { BarChart, GaugeRing, LineAreaChart } from "../../components/charts/Charts";
 import { DetectionPipeline } from "../../components/flow/DetectionPipeline";
@@ -10,6 +11,7 @@ import { packetPerMinute } from "../../data/series";
 export function WorkspacePage() {
   const { task, wizardSteps, runWizard } = useAnalysisStore();
   const setToast = useUiStore((state) => state.setToast);
+  const navigate = useNavigate();
   const startRun = () => {
     runWizard();
     setToast("综合检测流程已启动");
@@ -49,7 +51,7 @@ export function WorkspacePage() {
           <BarChart rows={[{ label: "chat", value: 92 }, { label: "file", value: 78 }, { label: "photo", value: 66 }]} />
           <h3>群组匹配 Top 5</h3>
           <BarChart rows={task.groupMatch.map((group) => ({ label: group.groupName, value: Math.round(group.probability * 100) }))} />
-          <button className="primary-button full" onClick={() => setToast("分析报告已生成，可在报告中心查看")}><FileText size={17} />一键生成报告</button>
+          <button className="primary-button full" onClick={() => { setToast("分析报告已生成"); navigate("/reports"); }}><FileText size={17} />一键生成报告</button>
         </article>
       </section>
       <section className="inference-grid">

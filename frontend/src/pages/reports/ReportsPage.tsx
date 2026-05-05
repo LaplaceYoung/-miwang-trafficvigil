@@ -13,6 +13,7 @@ export function ReportsPage() {
   const [selectedId, setSelectedId] = useState(historyTasks[0].taskId);
   const [filter, setFilter] = useState<"all" | "high" | "completed">("all");
   const [page, setPage] = useState(1);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const setToast = useUiStore((state) => state.setToast);
 
   const riskForIndex = (index: number): RiskLevel => (index === 0 ? "critical" : index === 1 ? "high" : "medium");
@@ -57,9 +58,9 @@ export function ReportsPage() {
         eyebrow="Report Center"
         title="分析报告中心"
         description="输出报告总览、分类结论、行为画像、群组关联、置信度说明，并支持 PDF / CSV / JSON / PNG 导出。"
-        action={<div className="page-actions"><button className="secondary-button" onClick={() => { window.print(); setToast("打印任务已创建"); }}><Printer size={16} />打印</button><button className="secondary-button" onClick={() => setToast("报告预览已切换到全屏阅读模式")}><Maximize2 size={16} />全屏查看</button></div>}
+        action={<div className="page-actions"><button className="secondary-button" onClick={() => { window.print(); setToast("打印任务已创建"); }}><Printer size={16} />打印</button><button className="secondary-button" onClick={() => { setPreviewExpanded((value) => !value); setToast(previewExpanded ? "报告预览已恢复标准视图" : "报告预览已切换到全屏阅读模式"); }}><Maximize2 size={16} />{previewExpanded ? "标准查看" : "全屏查看"}</button></div>}
       />
-      <section className="report-layout rich-report">
+      <section className={`report-layout rich-report ${previewExpanded ? "preview-expanded" : ""}`}>
         <aside className="panel report-sidebar">
           <div className="panel-title"><h2>报告列表</h2><span>{filteredTasks.length} reports</span></div>
           <label className="search-box"><Search size={16} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="搜索报告编号、任务名或文件名" /></label>
