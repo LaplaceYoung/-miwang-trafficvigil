@@ -45,7 +45,20 @@ export function RelationGraph({
         <text x="210" y="316">Device-02</text>
         {groupNodes.map(({ group, x, y }) => {
           return (
-            <g key={group.groupId} onClick={() => onSelect(group.groupId)} className={selectedId === group.groupId ? "selected" : ""}>
+            <g
+              key={group.groupId}
+              tabIndex={0}
+              role="button"
+              aria-label={`选择群组 ${group.groupName}`}
+              onClick={() => onSelect(group.groupId)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(group.groupId);
+                }
+              }}
+              className={selectedId === group.groupId ? "selected" : ""}
+            >
               <circle cx={x} cy={y} r={selectedId === group.groupId ? 50 : 38} className={`node-group ${riskClass(group.riskLevel)}`} />
               <text x={x} y={y + 5}>{group.platform}</text>
             </g>

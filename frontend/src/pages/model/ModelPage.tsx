@@ -1,3 +1,4 @@
+import { Boxes, BrainCircuit, Cpu, GitBranch, ShieldCheck } from "lucide-react";
 import { BarChart } from "../../components/charts/Charts";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { performanceRows } from "../../data/series";
@@ -5,6 +6,12 @@ import { useUiStore } from "../../store/uiStore";
 
 export function ModelPage() {
   const setToast = useUiStore((state) => state.setToast);
+  const statusCards = [
+    { label: "当前模型", value: "TV-GNN v1", icon: BrainCircuit },
+    { label: "在线实例", value: "12", icon: Cpu },
+    { label: "融合图层", value: "3", icon: GitBranch },
+    { label: "安全状态", value: "Trusted", icon: ShieldCheck }
+  ];
   return (
     <>
       <PageHeader
@@ -13,6 +20,20 @@ export function ModelPage() {
         description="集中呈现系统模型能力、特征建模方法、图神经网络结构、多模态融合机制和性能指标。"
         action={<div className="page-actions"><button className="secondary-button" onClick={() => setToast("模型评测记录已导出")}>导出评测</button><button className="secondary-button" onClick={() => setToast("TrafficVigil-GNN-v1 已设为当前版本")}>启用版本</button></div>}
       />
+      <section className="metric-grid five model-status-grid">
+        {statusCards.map(({ label, value, icon: Icon }) => (
+          <article key={label} className="metric-card">
+            <Icon className="metric-icon" size={22} />
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </article>
+        ))}
+        <article className="metric-card">
+          <Boxes className="metric-icon" size={22} />
+          <span>基线对比</span>
+          <strong>+7.8%</strong>
+        </article>
+      </section>
       <section className="architecture-board">
         {[
           ["特征建模", "通用流量预训练、SIM 微调、对抗性噪声增强、新协议适配"],

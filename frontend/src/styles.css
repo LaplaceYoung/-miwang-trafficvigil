@@ -855,6 +855,46 @@ select:focus {
   gap: 12px;
 }
 
+.visual-step-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.visual-step-grid article {
+  position: relative;
+  min-height: 118px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, color-mix(in oklch, var(--cyan) 10%, transparent), transparent),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.visual-step-grid svg {
+  color: var(--cyan);
+  filter: drop-shadow(0 0 12px color-mix(in oklch, var(--cyan) 64%, transparent));
+}
+
+.visual-step-grid span,
+.visual-step-grid strong {
+  display: block;
+}
+
+.visual-step-grid span {
+  margin-top: 18px;
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+.visual-step-grid strong {
+  margin-top: 6px;
+  font-size: 18px;
+}
+
 .process-overview div {
   min-height: 118px;
   padding: 16px;
@@ -1420,7 +1460,8 @@ tbody tr {
   }
 
   .process-overview,
-  .grid-4 {
+  .grid-4,
+  .visual-step-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1431,7 +1472,8 @@ tbody tr {
   .mini-metrics,
   .form-grid.two,
   .process-overview,
-  .grid-4 {
+  .grid-4,
+  .visual-step-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1505,7 +1547,18 @@ tbody tr {
   font-weight: 900;
 }
 
+.site-nav button {
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .site-nav a:hover,
+.site-nav button:hover,
 .site-nav .site-login {
   color: var(--text);
 }
@@ -1830,6 +1883,42 @@ tbody tr {
 .capture-status dd {
   margin: 0;
   line-height: 1.45;
+}
+
+.settings-status-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.settings-status-strip article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 92px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.settings-status-strip svg {
+  grid-row: span 2;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 10px color-mix(in oklch, var(--cyan) 60%, transparent));
+}
+
+.settings-status-strip span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.settings-status-strip strong {
+  font-size: 24px;
 }
 
 .gauge-ring {
@@ -2185,7 +2274,8 @@ tbody tr {
   .inference-grid,
   .command-grid,
   .report-layout.rich-report,
-  .packet-stat-row {
+  .packet-stat-row,
+  .settings-status-strip {
     grid-template-columns: 1fr;
   }
 

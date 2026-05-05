@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Download, Save } from "lucide-react";
+import { Download, FileSearch, MessageSquareLock, PlayCircle, Save, Smartphone, Workflow } from "lucide-react";
 import { BarChart, DonutChart } from "../../components/charts/Charts";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { FlowResultTable } from "../../components/tables/DataTables";
@@ -10,14 +10,29 @@ const apps = Object.entries(currentTask.simResult.apps);
 
 export function SimAnalysisPage() {
   const setToast = useUiStore((state) => state.setToast);
+  const stages = [
+    { label: "SIM 流量提取", icon: MessageSquareLock },
+    { label: "应用指纹识别", icon: Smartphone },
+    { label: "概率矩阵生成", icon: Workflow },
+    { label: "结果流量管理", icon: FileSearch }
+  ];
   return (
     <>
       <PageHeader
         eyebrow="SIM Analysis"
         title="SIM 加密即时通信分析"
         description="从混合流量中提取 SIM 流量，识别 Telegram、WhatsApp、Signal、WeChat、QQ、Unknown 等应用，为行为嗅探和群组匹配提供输入。"
-        action={<button className="primary-button" onClick={() => setToast("SIM 分类与应用识别已完成")}>开始 SIM 分类</button>}
+        action={<button className="primary-button" onClick={() => setToast("SIM 分类与应用识别已完成")}><PlayCircle size={17} />开始 SIM 分类</button>}
       />
+      <section className="visual-step-grid">
+        {stages.map(({ label, icon: Icon }, index) => (
+          <article key={label}>
+            <Icon size={24} />
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{label}</strong>
+          </article>
+        ))}
+      </section>
       <section className="workspace-grid">
         <article className="panel">
           <div className="panel-title"><h2>SIM / 非 SIM 分类</h2><span>accuracy 98.7%</span></div>

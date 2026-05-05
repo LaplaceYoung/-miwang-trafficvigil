@@ -1,4 +1,4 @@
-import { RotateCcw, Search, Trash2 } from "lucide-react";
+import { RotateCcw, Save, Search, Settings2, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { historyTasks } from "../../store/analysisStore";
@@ -10,14 +10,25 @@ export function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const setToast = useUiStore((state) => state.setToast);
   const [query, setQuery] = useState("");
+  const [dirty, setDirty] = useState(false);
   const filtered = historyTasks.filter((task) => task.fileName.includes(query) || task.taskName.includes(query));
+  const markDirty = (label: string) => {
+    setDirty(true);
+    setToast(`${label}已更新`);
+  };
   return (
     <>
       <PageHeader
         eyebrow="History & Settings"
         title="任务历史与系统设置"
         description="包含历史任务筛选、任务复现、模型配置、协议适配、用户权限、系统日志和 API 延迟监测。"
+        action={<div className="page-actions"><button className="secondary-button" onClick={() => { setDirty(false); setToast("系统配置已保存"); }}><Save size={16} />保存配置</button><button className="secondary-button" onClick={() => setToast("权限策略已重新校验")}><ShieldCheck size={16} />校验权限</button></div>}
       />
+      <section className="settings-status-strip">
+        <article><Settings2 size={22} /><span>配置状态</span><strong>{dirty ? "待保存" : "已同步"}</strong></article>
+        <article><ShieldCheck size={22} /><span>权限策略</span><strong>{user?.role ?? "管理员"}</strong></article>
+        <article><RotateCcw size={22} /><span>可复现任务</span><strong>{filtered.length}</strong></article>
+      </section>
       <section className="workspace-grid">
         <article className="panel">
           <div className="panel-title"><h2>历史任务</h2><span>{filtered.length} tasks</span></div>
@@ -40,12 +51,12 @@ export function SettingsPage() {
           <div className="panel-title"><h2>系统设置</h2><span>{user?.role}</span></div>
           <div className="form-grid">
             <label>用户信息<input name="settings-user" aria-label="用户信息" value={`${user?.username} / ${user?.organization}`} readOnly /></label>
-            <label>模型选择<select name="settings-model" aria-label="模型选择"><option>TrafficVigil-GNN-v1</option><option>ET-BERT compatible</option><option>GraphDApp baseline</option></select></label>
-            <label>协议适配<select name="settings-protocol" aria-label="协议适配"><option>TLS1.3 / QUIC / WireGuard 开启</option><option>仅 TLS1.3</option></select></label>
-            <label>默认检测模式<select name="settings-mode" aria-label="默认检测模式"><option>完整检测</option><option>快速检测</option></select></label>
-            <label>报告模板<select name="settings-report" aria-label="报告模板"><option>标准分析报告模板</option><option>安全运营研判版</option></select></label>
-            <label>数据脱敏<select name="settings-mask" aria-label="数据脱敏"><option>启用 IP 与设备标识脱敏</option><option>保留授权实验字段</option></select></label>
-            <label>主题切换<select name="settings-theme" aria-label="主题切换"><option>深色安全态势</option><option>浅色报告模式</option></select></label>
+            <label>模型选择<select name="settings-model" aria-label="模型选择" onChange={() => markDirty("模型选择")}><option>TrafficVigil-GNN-v1</option><option>ET-BERT compatible</option><option>GraphDApp baseline</option></select></label>
+            <label>协议适配<select name="settings-protocol" aria-label="协议适配" onChange={() => markDirty("协议适配")}><option>TLS1.3 / QUIC / WireGuard 开启</option><option>仅 TLS1.3</option></select></label>
+            <label>默认检测模式<select name="settings-mode" aria-label="默认检测模式" onChange={() => markDirty("默认检测模式")}><option>完整检测</option><option>快速检测</option></select></label>
+            <label>报告模板<select name="settings-report" aria-label="报告模板" onChange={() => markDirty("报告模板")}><option>标准分析报告模板</option><option>安全运营研判版</option></select></label>
+            <label>数据脱敏<select name="settings-mask" aria-label="数据脱敏" onChange={() => markDirty("数据脱敏策略")}><option>启用 IP 与设备标识脱敏</option><option>保留授权实验字段</option></select></label>
+            <label>主题切换<select name="settings-theme" aria-label="主题切换" onChange={() => markDirty("主题")}><option>深色安全态势</option><option>浅色报告模式</option></select></label>
           </div>
         </article>
       </section>

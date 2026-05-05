@@ -1,4 +1,4 @@
-import { Download, Save } from "lucide-react";
+import { Cpu, Download, PlayCircle, Save, ShieldCheck, Split, UploadCloud } from "lucide-react";
 import { BarChart, DonutChart, LineAreaChart } from "../../components/charts/Charts";
 import { PageHeader } from "../../components/layout/AppLayout";
 import { FlowResultTable } from "../../components/tables/DataTables";
@@ -8,14 +8,29 @@ import { useUiStore } from "../../store/uiStore";
 
 export function VpnAnalysisPage() {
   const setToast = useUiStore((state) => state.setToast);
+  const stages = [
+    { label: "PCAP 输入", icon: UploadCloud },
+    { label: "协议解析", icon: Split },
+    { label: "模型推理", icon: Cpu },
+    { label: "VPN 判定", icon: ShieldCheck }
+  ];
   return (
     <>
       <PageHeader
         eyebrow="VPN Analysis"
         title="VPN 流量分析"
         description="完成 VPN / 非 VPN 分类、协议识别、流量分布展示和分类结果表输出，支撑后续 SIM 分析。"
-        action={<button className="primary-button" onClick={() => setToast("VPN 分类任务已完成")}>开始 VPN 分类</button>}
+        action={<button className="primary-button" onClick={() => setToast("VPN 分类任务已完成")}><PlayCircle size={17} />开始 VPN 分类</button>}
       />
+      <section className="visual-step-grid">
+        {stages.map(({ label, icon: Icon }, index) => (
+          <article key={label}>
+            <Icon size={24} />
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{label}</strong>
+          </article>
+        ))}
+      </section>
       <section className="workspace-grid">
         <article className="panel">
           <div className="panel-title"><h2>PCAP 输入区</h2><span>TV-0427</span></div>

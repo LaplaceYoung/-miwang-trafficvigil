@@ -88,7 +88,18 @@ export function GroupMatchTable({ rows, onSelect }: { rows: GroupMatch[]; onSele
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.groupId} onClick={() => onSelect?.(row.groupId)}>
+            <tr
+              key={row.groupId}
+              tabIndex={onSelect ? 0 : undefined}
+              role={onSelect ? "button" : undefined}
+              onClick={() => onSelect?.(row.groupId)}
+              onKeyDown={(event) => {
+                if (onSelect && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  onSelect(row.groupId);
+                }
+              }}
+            >
               <td>{row.groupId}</td>
               <td>{row.groupName}</td>
               <td>{row.platform}</td>

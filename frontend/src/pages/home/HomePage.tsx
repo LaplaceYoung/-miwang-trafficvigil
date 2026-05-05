@@ -37,14 +37,17 @@ const flowSteps = ["流量捕获", "预处理", "VPN 分类", "SIM 分类", "行
 
 export function HomePage() {
   const setToast = useUiStore((state) => state.setToast);
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   return (
     <main className="site-page">
       <nav className="site-nav">
         <Link to="/" className="site-brand"><ShieldCheck size={24} /><span>TrafficVigil 密网巡哨</span></Link>
         <div>
-          <a href="#capabilities">核心能力</a>
-          <a href="#technology">技术路线</a>
-          <a href="#materials">作品材料</a>
+          <button type="button" onClick={() => scrollToSection("capabilities")}>核心能力</button>
+          <button type="button" onClick={() => scrollToSection("technology")}>技术路线</button>
+          <button type="button" onClick={() => scrollToSection("materials")}>作品材料</button>
           <Link to="/login" className="site-login">进入系统</Link>
         </div>
       </nav>
