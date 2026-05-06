@@ -517,6 +517,21 @@ select:focus {
 
 .tv-table-wrap {
   max-width: 100%;
+  overflow: hidden;
+}
+
+.tv-table-wrap th,
+.tv-table-wrap td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tv-chart-bar {
+  min-height: 0;
+}
+
+.tv-chart-bar img {
+  flex: 0 0 auto;
 }
 
 .tv-switch span {
@@ -621,6 +636,37 @@ select:focus {
 
   .tv-input-row label {
     text-align: left;
+  }
+
+  .tv-table-wrap table,
+  .tv-table-wrap thead,
+  .tv-table-wrap tbody,
+  .tv-table-wrap tr,
+  .tv-table-wrap th,
+  .tv-table-wrap td {
+    display: block;
+    width: 100%;
+  }
+
+  .tv-table-wrap thead {
+    display: none;
+  }
+
+  .tv-table-wrap tr {
+    border-bottom: 1px solid rgba(103, 232, 249, .16);
+    padding: 8px;
+  }
+
+  .tv-table-wrap td {
+    display: grid;
+    grid-template-columns: minmax(92px, 38%) minmax(0, 1fr);
+    gap: 8px;
+    padding: 5px 4px;
+  }
+
+  .tv-table-wrap td::before {
+    content: attr(data-label);
+    color: rgb(148 163 184);
   }
 }
 

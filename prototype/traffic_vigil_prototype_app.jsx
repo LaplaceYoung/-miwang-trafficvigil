@@ -214,6 +214,15 @@ const reports = [
   ["RPT-20250519-0006", "公共 WiFi 风险行为研判", "2025-05-19 11:21:08", "10.1.2.55", "低危"],
 ];
 
+const appMeta = {
+  Telegram: { slug: "telegram", color: "#26a5e4", label: "Telegram" },
+  WhatsApp: { slug: "whatsapp", color: "#25d366", label: "WhatsApp" },
+  Signal: { slug: "signal", color: "#3a76f0", label: "Signal" },
+  WeChat: { slug: "wechat", color: "#07c160", label: "WeChat" },
+  QQ: { slug: "tencentqq", color: "#12b7f5", label: "QQ" },
+  Unknown: { slug: null, color: "#94a3b8", label: "Unknown" },
+};
+
 function cx(...v) {
   return v.filter(Boolean).join(" ");
 }
@@ -303,7 +312,7 @@ function App() {
       <Topbar collapsed={collapsed} setCollapsed={setCollapsed} go={go} />
       <div className="flex pt-[62px]">
         <Sidebar route={route} go={go} collapsed={collapsed} />
-        <main className={cx("tv-main-content min-h-[calc(100vh-62px)] flex-1 transition-all duration-300", collapsed ? "ml-[82px]" : "ml-[250px]")}>{page}</main>
+        <main className={cx("tv-main-content min-h-[calc(100vh-62px)] min-w-0 transition-all duration-300", collapsed ? "ml-[82px] w-[calc(100vw-82px)]" : "ml-[250px] w-[calc(100vw-250px)]")}>{page}</main>
       </div>
       <ToastStack items={toasts} />
     </div>
@@ -335,11 +344,12 @@ function ToastStack({ items }) {
 
 function Topbar({ collapsed, setCollapsed, go }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const notifications = [
-    ["高危群组预警", "TG-8f3a...7c21 命中严重风险", "group", "严重"],
-    ["报告生成完成", "RPT-20250519-0001 可导出", "reports", "完成"],
-    ["任务仍在运行", "TASK-20250519-0003 正在复现", "tasks", "运行中"],
-  ];
+  const [notifications, setNotifications] = useState([
+    { title: "高危群组预警", body: "TG-8f3a...7c21 命中严重风险", target: "group", tag: "严重", read: false },
+    { title: "报告生成完成", body: "RPT-20250519-0001 可导出", target: "reports", tag: "完成", read: false },
+    { title: "任务仍在运行", body: "TASK-20250519-0003 正在复现", target: "tasks", tag: "运行中", read: false },
+  ]);
+  const unreadCount = notifications.filter((item) => !item.read).length;
   return (
     <header className="tv-topbar fixed left-0 right-0 top-0 z-50 h-[62px] border-b border-cyan-300/15 bg-[#06111f]/92 backdrop-blur-xl">
       <div className="flex h-full items-center justify-between px-5">
@@ -357,15 +367,15 @@ function Topbar({ collapsed, setCollapsed, go }) {
           <div className="relative">
             <button type="button" onClick={() => setNotificationsOpen((v) => !v)} className="tv-icon-button relative rounded-lg p-1.5" aria-label="通知中心" aria-expanded={notificationsOpen}>
               <Bell size={20} />
-              <b className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-red-500 text-[10px]">12</b>
+              {unreadCount > 0 && <b className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-red-500 text-[10px]">{unreadCount}</b>}
             </button>
             {notificationsOpen && (
               <div className="absolute right-0 top-11 w-80 rounded-xl border border-cyan-300/20 bg-slate-950/95 p-2 text-left shadow-2xl shadow-black/40">
-                <div className="mb-1 flex items-center justify-between px-2 py-1 text-xs text-slate-400"><span>通知中心</span><button type="button" className="text-cyan-300" onClick={() => toast("全部通知已标记为已读")}>全部已读</button></div>
-                {notifications.map(([title, body, target, tag]) => (
-                  <button key={title} type="button" onClick={() => { setNotificationsOpen(false); toast(`${title} 已打开`); go(target); }} className="tv-button mb-1 w-full rounded-lg border border-cyan-300/10 bg-slate-900/55 p-3 text-left hover:bg-cyan-400/10">
-                    <div className="flex items-center justify-between gap-3"><b className="text-slate-100">{title}</b><span className="rounded-md border border-cyan-300/20 px-2 py-0.5 text-xs text-cyan-200">{tag}</span></div>
-                    <p className="mt-1 text-xs text-slate-400">{body}</p>
+                <div className="mb-1 flex items-center justify-between px-2 py-1 text-xs text-slate-400"><span>通知中心</span><button type="button" className="text-cyan-300" onClick={() => setNotifications((items) => items.map((item) => ({ ...item, read: true })))}>全部已读</button></div>
+                {notifications.map((notice) => (
+                  <button key={notice.title} type="button" onClick={() => { setNotifications((items) => items.map((item) => item.title === notice.title ? { ...item, read: true } : item)); setNotificationsOpen(false); go(notice.target); }} className={cx("tv-button mb-1 w-full rounded-lg border border-cyan-300/10 p-3 text-left hover:bg-cyan-400/10", notice.read ? "bg-slate-900/35 opacity-70" : "bg-slate-900/70")}>
+                    <div className="flex items-center justify-between gap-3"><b className="text-slate-100">{notice.title}</b><span className="rounded-md border border-cyan-300/20 px-2 py-0.5 text-xs text-cyan-200">{notice.tag}</span></div>
+                    <p className="mt-1 text-xs text-slate-400">{notice.body}</p>
                   </button>
                 ))}
               </div>
@@ -423,6 +433,14 @@ function ChartTooltip({ tip }) {
       {tip.body && <span className="mt-1 block text-slate-400">{tip.body}</span>}
     </div>
   );
+}
+
+function AppIcon({ app, size = 26 }) {
+  const meta = appMeta[app] || appMeta.Unknown;
+  if (!meta.slug) {
+    return <span className="grid place-items-center rounded-full border border-slate-500/30 bg-slate-800/70" style={{ width: size, height: size }}><Hash size={Math.max(14, size - 10)} className="text-slate-300" /></span>;
+  }
+  return <img src={`https://cdn.simpleicons.org/${meta.slug}/${meta.color.replace("#", "")}`} alt={`${meta.label} icon`} width={size} height={size} className="rounded-full bg-slate-950/60 p-1" loading="lazy" />;
 }
 
 function PageShell({ title, subtitle, children, actions }) {
@@ -497,15 +515,16 @@ function Donut({ data, center, size = 160, labels = [], onSegmentClick }) {
   );
 }
 
-function BarChart({ items, max = 50, height = 140, onBarClick }) {
+function BarChart({ items, max = 50, height = 92, onBarClick, showAppIcons = false }) {
   const [tip, setTip] = useState(null);
   return (
-    <div className="relative flex h-full items-end gap-5 px-2 pt-5" style={{ minHeight: height }} onMouseLeave={() => setTip(null)}>
+    <div className="relative grid h-full grid-cols-[repeat(auto-fit,minmax(64px,1fr))] items-end gap-2 px-1 pt-1" style={{ minHeight: height + (showAppIcons ? 74 : 46) }} onMouseLeave={() => setTip(null)}>
       {items.map((it) => (
-        <button key={it.label} type="button" onMouseEnter={(event) => setTip({ title: it.label, body: `${it.value}%`, x: event.currentTarget.offsetLeft + 4, y: 6 })} onClick={() => onBarClick ? onBarClick(it) : toast(`${it.label} ${it.value}%`)} className="tv-chart-bar flex flex-1 flex-col items-center gap-2 rounded-lg border border-transparent p-1 hover:border-cyan-300/20 hover:bg-cyan-400/5">
-          <div className="text-sm font-semibold text-slate-100">{it.value}%</div>
-          <div className="w-12 rounded-t-lg shadow-lg" style={{ height: `${Math.max(16, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)` }} />
-          <div className="text-xs text-slate-300">{it.label}</div>
+        <button key={it.label} type="button" onMouseEnter={(event) => setTip({ title: it.label, body: `${it.value}%`, x: event.currentTarget.offsetLeft + 4, y: 6 })} onClick={() => onBarClick ? onBarClick(it) : toast(`${it.label} ${it.value}%`)} className="tv-chart-bar flex min-w-0 flex-col items-center gap-2 rounded-lg border border-transparent p-1.5 hover:border-cyan-300/20 hover:bg-cyan-400/5">
+          {showAppIcons && <AppIcon app={it.label} size={22} />}
+          <div className="text-xs font-semibold text-slate-100">{it.value}%</div>
+          <div className="w-full max-w-8 rounded-t-lg shadow-lg" style={{ height: `${Math.max(14, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)` }} />
+          <div className="w-full break-words text-center text-[11px] leading-tight text-slate-300">{it.label}</div>
         </button>
       ))}
       <ChartTooltip tip={tip} />
@@ -537,13 +556,13 @@ function AreaLine({ color = palette.blue, height = 170, onPointClick }) {
 
 function DataTable({ columns, rows, renderCell }) {
   return (
-    <div className="tv-table-wrap overflow-x-auto rounded-xl border border-cyan-300/12">
-      <table className="w-full min-w-max border-collapse text-xs">
+    <div className="tv-table-wrap rounded-xl border border-cyan-300/12">
+      <table className="w-full table-fixed border-collapse text-xs">
         <thead className="bg-slate-900/55 text-xs text-slate-300">
           <tr>{columns.map((c) => <th key={c} className="border-b border-cyan-300/12 px-3 py-2 text-left font-medium">{c}</th>)}</tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => <tr key={i} className="border-b border-cyan-300/8 text-slate-300 hover:bg-cyan-400/5">{r.map((cell, j) => <td key={j} className="px-3 py-2">{renderCell ? renderCell(cell, j, r, i) : cell}</td>)}</tr>)}
+          {rows.map((r, i) => <tr key={i} className="border-b border-cyan-300/8 text-slate-300 hover:bg-cyan-400/5">{r.map((cell, j) => <td key={j} data-label={columns[j]} className="break-words px-3 py-2 align-top">{renderCell ? renderCell(cell, j, r, i) : cell}</td>)}</tr>)}
         </tbody>
       </table>
     </div>
@@ -557,6 +576,7 @@ function RiskTag({ level }) {
 
 function LoginPage({ go, setAuthed }) {
   const [show, setShow] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const login = () => { setAuthed(true); toast("登录成功，已进入数据中心"); go("dashboard", { force: true }); };
   return (
     <div className="relative z-10 min-h-screen p-6">
@@ -583,7 +603,7 @@ function LoginPage({ go, setAuthed }) {
           <form className="mt-6 space-y-4" onSubmit={(event) => { event.preventDefault(); login(); }}>
             <Input label="账号" icon={UserCircle} placeholder="请输入账号" autoComplete="username" />
             <Input label="密码" icon={Lock} placeholder="请输入密码" type={show ? "text" : "password"} autoComplete="current-password" right={<button type="button" aria-label="切换密码可见性" onClick={() => setShow(!show)}>{show ? <Eye size={18} /> : <EyeOff size={18} />}</button>} />
-            <div className="flex justify-between text-sm"><label className="tv-check-row flex items-center gap-2 text-slate-400"><input type="checkbox" className="accent-blue-500" />记住登录</label><button type="button" onClick={() => toast("密码重置链接已模拟发送")} className="text-cyan-300">忘记密码?</button></div>
+            <div className="flex justify-between text-sm"><label className="tv-check-row flex items-center gap-2 text-slate-400"><input type="checkbox" className="accent-blue-500" />记住登录</label><button type="button" onClick={() => setResetSent(true)} className="text-cyan-300">{resetSent ? "重置链接已发送" : "忘记密码?"}</button></div>
             <Button onClick={login} className="h-11 w-full" icon={LogIn}>登录系统</Button>
             <Button onClick={login} variant="ghost" className="h-10 w-full" icon={Users}>演示账号进入</Button>
           </form>
@@ -635,7 +655,7 @@ function RegisterPage({ go }) {
         <div className="flex items-center gap-3"><Shield size={48} className="text-cyan-300" /><div><h1 className="text-3xl font-black">TrafficVigil 密网巡哨</h1><p className="text-slate-400">融合多模态大数据的加密流量识别溯源系统</p></div></div>
         <button type="button" onClick={() => go("login")} className="flex items-center gap-2 text-slate-300 hover:text-cyan-300"><ArrowLeft size={18} />返回登录</button>
       </div>
-      <div className="grid grid-cols-[1.25fr_.9fr] gap-9">
+      <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)] gap-9">
         <Card className="mx-auto w-full max-w-[900px] rounded-[28px] p-10">
           <div className="mb-8 flex items-center gap-5"><div className="grid h-16 w-16 place-items-center rounded-2xl bg-blue-500/15 text-cyan-300"><UserCircle size={38}/></div><div><h2 className="text-3xl font-bold">创建分析员账号</h2><p className="mt-1 text-slate-400">请填写以下信息以创建您的分析员账号</p></div></div>
           <div className="space-y-5">
@@ -667,8 +687,14 @@ function Input({ label, icon: Icon, placeholder, type = "text", right, autoCompl
 }
 
 function DashboardPage({ go }) {
+  const [updatedAt, setUpdatedAt] = useState("14:32:45");
+  const [range, setRange] = useState("今日");
+  const refreshDashboard = () => {
+    const now = new Date();
+    setUpdatedAt(now.toLocaleTimeString("zh-CN", { hour12: false }));
+  };
   return (
-    <PageShell title="数据中心" subtitle="全局数据概览与系统运行态势" actions={<><Button variant="ghost" icon={Calendar}>今日（2025-05-19）</Button><Button variant="ghost" icon={RefreshCw} onClick={() => toast("数据已刷新")}>刷新</Button></>}>
+    <PageShell title="数据中心" subtitle={`全局数据概览与系统运行态势 · 更新 ${updatedAt}`} actions={<><SmallSelect label={range} options={["今日","近 7 日","近 30 日"]} onChange={setRange} /><Button variant="ghost" icon={RefreshCw} onClick={refreshDashboard}>刷新</Button></>}>
       <div className="grid grid-cols-6 gap-4">
         <StatCard title="今日分析任务" value="1,246" sub="18.6%" icon={FileText} color={palette.blue} />
         <StatCard title="已处理 PCAP 文件" value="3,782" sub="22.4%" icon={Folder} color={palette.purple} />
@@ -677,12 +703,12 @@ function DashboardPage({ go }) {
         <StatCard title="行为分析准确率" value="90.2%" sub="1.8%" icon={Activity} color={palette.blue} />
         <StatCard title="群组匹配准确率" value="89.4%" sub="1.6%" icon={Users} color={palette.purple} />
       </div>
-      <div className="mt-4 grid grid-cols-[1.1fr_.9fr] gap-4">
+      <div className="mt-4 grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4">
         <Card><PanelTitle title="实时流量态势" /><AreaLine onPointClick={() => go("capture")} /></Card>
-        <Card><PanelTitle title="加密流量构成" right={<SmallSelect label="今日" />} /><div className="grid grid-cols-[.9fr_1fr] items-center"><Donut labels={["普通流量", "VPN 流量", "SIM 流量"]} onSegmentClick={(d, i) => go(i === 1 ? "vpn" : i === 2 ? "sim" : "capture")} center={<><div>总流量</div><b className="text-xl">1.82 TB</b></>} data={[{value:43.4,color:palette.blue},{value:39.1,color:palette.cyan},{value:17.5,color:palette.purple}]} /><Legend items={[ ["普通流量", "789.45 GB", "43.4%", palette.blue], ["VPN 流量", "712.31 GB", "39.1%", palette.cyan], ["SIM 流量", "319.77 GB", "17.5%", palette.purple] ]} /></div><div className="mt-2 text-center text-cyan-300">加密流量占比：56.6%（1.03 TB）</div></Card>
+        <Card><PanelTitle title="加密流量构成" right={<SmallSelect label={range} options={["今日","近 7 日","近 30 日"]} onChange={setRange} />} /><div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] items-center"><Donut labels={["普通流量", "VPN 流量", "SIM 流量"]} onSegmentClick={(d, i) => go(i === 1 ? "vpn" : i === 2 ? "sim" : "capture")} center={<><div>总流量</div><b className="text-xl">1.82 TB</b></>} data={[{value:43.4,color:palette.blue},{value:39.1,color:palette.cyan},{value:17.5,color:palette.purple}]} /><Legend items={[ ["普通流量", "789.45 GB", "43.4%", palette.blue], ["VPN 流量", "712.31 GB", "39.1%", palette.cyan], ["SIM 流量", "319.77 GB", "17.5%", palette.purple] ]} /></div><div className="mt-2 text-center text-cyan-300">加密流量占比：56.6%（1.03 TB）</div></Card>
       </div>
-      <div className="mt-4 grid grid-cols-[1fr_.92fr] gap-4">
-        <Card><PanelTitle title="IM 应用分布" right={<SmallSelect label="今日" />} /><BarChart onBarClick={() => go("sim")} items={[{label:"Telegram",value:42.7,color:palette.blue},{label:"WhatsApp",value:24.3,color:palette.cyan},{label:"Signal",value:12.6,color:palette.purple},{label:"WeChat",value:8.9,color:palette.green},{label:"QQ",value:6.3,color:palette.amber},{label:"Unknown",value:5.2,color:"#9ca3af"}]} /></Card>
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)] gap-4">
+        <Card><PanelTitle title="IM 应用分布" right={<SmallSelect label={range} options={["今日","近 7 日","近 30 日"]} onChange={setRange} />} /><BarChart showAppIcons onBarClick={() => go("sim")} items={[{label:"Telegram",value:42.7,color:appMeta.Telegram.color},{label:"WhatsApp",value:24.3,color:appMeta.WhatsApp.color},{label:"Signal",value:12.6,color:appMeta.Signal.color},{label:"WeChat",value:8.9,color:appMeta.WeChat.color},{label:"QQ",value:6.3,color:appMeta.QQ.color},{label:"Unknown",value:5.2,color:appMeta.Unknown.color}]} /></Card>
         <Card><PanelTitle title="高危群组预警" right={<button onClick={() => go("group")} className="text-cyan-300">更多</button>} /><div className="space-y-3">{[["严重","TG-8f3a...7c21","暗网交易，武器，支付凭证","2025-05-19 14:28:11"],["高危","TG-2bd9...a631","涉诈引流，虚假投资，跳转链接","2025-05-19 14:21:47"],["高危","WA-7c11...09ab","赌博，洗钱，USDT 交易","2025-05-19 14:19:02"],["中危","TG-9e2b...c44f","违规营销，批量注册，账号交易","2025-05-19 14:13:33"],["中危","TG-4a7d...f18b","色情内容，付费资源分享","2025-05-19 14:07:59"]].map(r => <div key={r[1]} className="grid grid-cols-[70px_130px_1fr_170px] items-center border-b border-cyan-300/10 py-2 text-sm"><RiskTag level={r[0]} /><span>{r[1]}</span><span className="text-slate-300">{r[2]}</span><span className="text-right text-slate-400">{r[3]}</span></div>)}</div></Card>
       </div>
       <Card className="mt-4"><PanelTitle title="检测流程" /><div className="flex items-center justify-between py-4">{[[Radio,"流量捕获"],[Zap,"预处理"],[Globe2,"VPN 分类"],[TableProperties,"SIM 分类"],[Layers3,"应用识别"],[Eye,"行为嗅探"],[Users,"群组匹配"],[FileText,"报告生成"]].map(([Icon,t],i) => <React.Fragment key={t}><button onClick={() => go(i === 0 ? "capture" : i < 5 ? "workspace" : i === 5 ? "behavior" : i === 6 ? "group" : "reports")} className="text-center"><div className="mx-auto mb-2 grid h-16 w-16 place-items-center rounded-full border border-cyan-300/25 bg-slate-900/60 text-cyan-300 hover:bg-blue-500/20"><Icon /></div><span>{t}</span></button>{i<7 && <ArrowRight className="text-cyan-500/50" />}</React.Fragment>)}</div></Card>
@@ -691,9 +717,25 @@ function DashboardPage({ go }) {
 }
 
 function PanelTitle({ title, right }) { return <div className="mb-2 flex items-center justify-between gap-3"><h3 className="flex items-center gap-2 text-base font-bold">{title} <CircleDot size={13} className="text-slate-500" /></h3>{right}</div>; }
-function SmallSelect({ label }) {
+function SmallSelect({ label, options, onChange }) {
+  const choices = options || [label, "全部", "高危优先", "按时间排序"];
   const [open, setOpen] = useState(false);
-  return <button type="button" onClick={() => { setOpen((v) => !v); toast(`${label} ${open ? "已收起" : "已展开"}`); }} aria-pressed={open} className={cx("tv-button rounded-lg border border-cyan-300/15 bg-slate-950/35 px-3 py-1.5 text-xs text-slate-300", open && "border-cyan-300/45 bg-cyan-400/10 text-cyan-200")}>{label} <ChevronDown className={cx("inline transition-transform", open && "rotate-180")} size={14}/></button>;
+  const [selected, setSelected] = useState(label);
+  const pick = (value) => {
+    setSelected(value);
+    setOpen(false);
+    onChange?.(value);
+  };
+  return (
+    <span className="relative inline-flex">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className={cx("tv-button rounded-lg border border-cyan-300/15 bg-slate-950/35 px-3 py-1.5 text-xs text-slate-300", open && "border-cyan-300/45 bg-cyan-400/10 text-cyan-200")}>{selected} <ChevronDown className={cx("inline transition-transform", open && "rotate-180")} size={14}/></button>
+      {open && (
+        <span className="absolute right-0 top-9 z-30 w-36 rounded-lg border border-cyan-300/20 bg-slate-950/95 p-1 shadow-xl">
+          {choices.map((item) => <button type="button" key={item} onClick={() => pick(item)} className={cx("block w-full rounded-md px-3 py-1.5 text-left text-xs hover:bg-cyan-400/10", item === selected ? "text-cyan-200" : "text-slate-300")}>{item}</button>)}
+        </span>
+      )}
+    </span>
+  );
 }
 function Legend({ items }) { return <div className="space-y-4">{items.map(([a,b,c,col]) => <div key={a} className="grid grid-cols-[1fr_110px_70px] items-center gap-2 text-sm"><span className="flex items-center gap-2"><i className="h-3 w-3 rounded-full" style={{background:col}} />{a}</span><b>{b}</b><span>{c}</span></div>)}</div>; }
 
@@ -720,7 +762,7 @@ function CapturePage({ go }) {
   ];
   return (
     <PageShell title="流量捕获中心" subtitle="上传 PCAP 文件或进行实时抓取，获取网络数据包用于检测与分析">
-      <div className="grid grid-cols-[1.15fr_.95fr_.55fr] gap-4">
+      <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-4">
         <Card><PanelTitle title="PCAP 文件上传" /><div onClick={() => { setUpload(0); toast("已选择 capture_20250519_142500.pcapng"); setTimeout(() => setUpload(78), 200); }} className="grid h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-cyan-300/35 bg-slate-950/30 text-center hover:bg-cyan-400/5"><div><UploadCloud className="mx-auto mb-3 text-cyan-300" size={45}/><p>将 PCAP / PCAPNG 文件拖到此处，或点击选择文件</p><p className="mt-2 text-sm text-slate-500">支持格式：.pcap / .pcapng</p></div></div><div className="mt-4 flex items-center justify-between rounded-lg border border-cyan-300/12 bg-slate-950/35 px-4 py-3 text-sm"><span><FileText size={16} className="mr-2 inline" />capture_20250519_142500.pcapng</span><span>1.82 GB <X size={15} className="ml-2 inline cursor-pointer" onClick={() => setUpload(0)} /></span></div><div className="mt-5"><div className="mb-2 flex justify-between text-sm"><span>上传进度</span><b>{upload}%</b></div><div className="h-3 rounded-full bg-slate-800"><div className="h-full rounded-full bg-blue-500" style={{ width: `${upload}%` }} /></div><div className="mt-3 flex justify-between text-sm text-slate-400"><span>已上传：1.42 GB / 1.82 GB</span><span>预计剩余：<b className="text-emerald-300">00:00:12</b></span></div></div></Card>
         <Card><PanelTitle title="实时抓取" /><div className="space-y-4"><ControlRow label="选择网卡"><ToggleGroup items={["WLAN","Ethernet","Loopback"]} active="WLAN" /></ControlRow><SelectLine text="Intel(R) Wi‑Fi 6 AX201 160MHz (192.168.1.88)" /><ControlRow label="抓取时长"><SelectLine text="00 : 10 : 00" /></ControlRow><ControlRow label="协议过滤"><div className="flex flex-wrap gap-2">{["TCP","UDP","TLS 1.3","QUIC","WireGuard"].map(x => <span key={x} className="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-300">{x} ×</span>)}</div></ControlRow><div className="grid grid-cols-2 gap-4 pt-2"><Button onClick={() => { setRunning(true); toast("实时抓取已启动"); }} icon={Play}>开始抓取</Button><Button onClick={() => { setRunning(false); toast("实时抓取已停止"); }} variant="ghost" icon={Square}>停止抓取</Button></div></div></Card>
         <Card><div className="mb-3 flex justify-between"><h3 className="text-lg font-bold">任务状态</h3><span className={cx("rounded-full px-3 py-1 text-xs", running ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700 text-slate-300")}>{running ? "进行中" : "待启动"}</span></div><div className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><div className="mb-4 flex items-center gap-3 text-cyan-300"><CircleDot />{running ? "实时抓取中" : "等待抓取"}</div>{[["开始时间","2025-05-19 14:30:15"],["运行时长", formatTime(elapsed)],["数据源","WLAN (192.168.1.88)"],["抓取时长","00:10:00"]].map(r => <div className="mb-3 flex justify-between text-sm" key={r[0]}><span className="text-slate-400">{r[0]}</span><span>{r[1]}</span></div>)}</div><Button onClick={() => go("workspace")} className="mt-4 w-full" icon={ArrowRight}>进入综合检测</Button></Card>
@@ -761,11 +803,11 @@ function WorkspacePage({ go }) {
   const steps = ["选择流量数据","流量预处理","VPN / 非 VPN 分类","SIM / 非 SIM 分类","IM 应用分类","行为嗅探","公共群组匹配","生成分析报告"];
   return (
     <PageShell title={<span>综合检测工作台 <span className="ml-2 rounded-md bg-blue-500/20 px-2 text-base text-cyan-300">P05</span></span>} subtitle="一键式端到端检测流程，自动化识别与分析暗网/隐蔽通信行为" actions={<Button variant="ghost" icon={Folder} onClick={() => go("tasks")}>任务历史</Button>}>
-      <Card><div className="grid grid-cols-[1.4fr_1.2fr_.9fr_.9fr_1fr] gap-3"><ConfigBox title="选择 PCAP" value="sample_traffic_0519.pcap" ok /><ConfigBox title="检测模式" value={<ToggleGroup items={["快速检测","完整检测"]} active="完整检测" />} /><ConfigBox title="目标协议" value="全部协议" select /><ConfigBox title="目标应用" value="全部应用" select /><Button onClick={() => { setRunning(true); setStep(0); setProgress(0); toast("综合检测已启动"); }} className="h-full" icon={Play}>开始综合检测</Button></div></Card>
+      <Card><div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)] gap-3"><ConfigBox title="选择 PCAP" value="sample_traffic_0519.pcap" ok /><ConfigBox title="检测模式" value={<ToggleGroup items={["快速检测","完整检测"]} active="完整检测" />} /><ConfigBox title="目标协议" value="全部协议" select /><ConfigBox title="目标应用" value="全部应用" select /><Button onClick={() => { setRunning(true); setStep(0); setProgress(0); toast("综合检测已启动"); }} className="h-full" icon={Play}>开始综合检测</Button></div></Card>
       <div className="my-6 flex items-center justify-between px-10">{steps.map((s,i) => <React.Fragment key={s}><div className="text-center"><div className={cx("mx-auto grid h-14 w-14 place-items-center rounded-full border text-xl", i < step ? "border-emerald-400 bg-emerald-500/15 text-emerald-300" : i === step ? "border-blue-400 bg-blue-500/25 text-blue-200 animate-pulse" : "border-slate-500 bg-slate-900 text-slate-400")}>{i < step ? <CheckCircle2/> : iconsForStep(i)}</div><div className={cx("mt-2 text-sm", i===step && "text-cyan-300")}>{s}</div></div>{i<steps.length-1 && <div className={cx("h-1 flex-1", i < step ? "bg-emerald-400/70" : "bg-slate-700")}/>}</React.Fragment>)}</div>
-      <div className="grid grid-cols-[.72fr_1.1fr_.9fr] gap-4">
+      <div className="grid grid-cols-[minmax(0,0.72fr)_minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4">
         <Card><PanelTitle title="检测流程步骤" />{steps.map((s,i) => <div key={s} className="mb-3 grid grid-cols-[28px_1fr_86px_70px] items-center gap-2 text-sm"><span className={cx("grid h-7 w-7 place-items-center rounded-full border", i < step ? "border-emerald-400 text-emerald-300" : i === step ? "border-blue-400 text-blue-300" : "border-slate-600 text-slate-400")}>{i+1}</span><span>{s}</span><span className={cx("rounded-md px-2 py-1 text-center text-xs", i < step ? "bg-emerald-500/15 text-emerald-300" : i === step ? "bg-blue-500/15 text-blue-300" : "bg-slate-700/40 text-slate-400")}>{i < step ? "Success" : i === step ? "Running" : "Pending"}</span><span className="text-slate-500">{i<step?"00:0"+(i+5):i===step?"00:27":"--:--"}</span></div>)}</Card>
-        <Card><PanelTitle title={<span>当前步骤：<span className="text-cyan-300">{steps[step] || "生成分析报告"}</span></span>} /><div className="grid grid-cols-[1fr_.8fr] gap-4"><div className="h-[270px] overflow-auto rounded-xl border border-cyan-300/12 bg-slate-950/30 p-4 font-mono text-sm text-slate-300">{["14:32:01  开始加载特征模型与预训练权重...","14:32:03  解析流量特征向量 (Flow Features)...","14:32:04  提取设备指纹与通信模式特征...","14:32:06  构建 SIM 行为特征图谱...","14:32:07  运行 SIM 分类模型 (v2.4.1)...","14:32:23  已处理流量：712.31 GB","14:32:27  识别候选 SIM 流量：6,842 条","14:32:27  正在优化分类阈值与置信度..."].map(x=><p key={x} className="mb-3">{x}</p>)}</div><div className="space-y-4"><Card className="bg-slate-950/25"><Donut size={130} center={<><b className="text-2xl text-blue-300">{progress.toFixed(1)}%</b><p className="text-xs">712.31 GB / 1.82 TB</p></>} data={[{value:progress,color:palette.blue}]} /></Card><Card className="bg-slate-950/25"><PanelTitle title="特征匹配强度" /><TinyLine color={palette.purple}/></Card></div></div></Card>
+        <Card><PanelTitle title={<span>当前步骤：<span className="text-cyan-300">{steps[step] || "生成分析报告"}</span></span>} /><div className="grid grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] gap-4"><div className="h-[270px] overflow-auto rounded-xl border border-cyan-300/12 bg-slate-950/30 p-4 font-mono text-sm text-slate-300">{["14:32:01  开始加载特征模型与预训练权重...","14:32:03  解析流量特征向量 (Flow Features)...","14:32:04  提取设备指纹与通信模式特征...","14:32:06  构建 SIM 行为特征图谱...","14:32:07  运行 SIM 分类模型 (v2.4.1)...","14:32:23  已处理流量：712.31 GB","14:32:27  识别候选 SIM 流量：6,842 条","14:32:27  正在优化分类阈值与置信度..."].map(x=><p key={x} className="mb-3">{x}</p>)}</div><div className="space-y-4"><Card className="bg-slate-950/25"><Donut size={130} center={<><b className="text-2xl text-blue-300">{progress.toFixed(1)}%</b><p className="text-xs">712.31 GB / 1.82 TB</p></>} data={[{value:progress,color:palette.blue}]} /></Card><Card className="bg-slate-950/25"><PanelTitle title="特征匹配强度" /><TinyLine color={palette.purple}/></Card></div></div></Card>
         <Card><PanelTitle title="SIM 候选分布（置信度）" /><BarChart height={205} max={20} items={[{label:"0-0.2",value:3.4,color:palette.purple},{label:"0.2-0.4",value:7.1,color:palette.purple},{label:"0.4-0.6",value:11.4,color:palette.purple},{label:"0.6-0.8",value:9.1,color:palette.purple},{label:"0.8-1.0",value:5.5,color:palette.purple}]} /></Card>
       </div>
       <div className="mt-4 grid grid-cols-6 gap-4">{[["VPN 置信度","94.8%","VPN 流量占比 43.4%",Globe2,palette.cyan],["SIM 置信度","89.4%","SIM 流量占比 39.1%",TableProperties,palette.purple],["应用分类 Top 3","Telegram","总计占比 79.6%",MessageCircle,palette.green],["行为分类 Top 3","加密通信","总计占比 84.1%",Eye,palette.blue],["群组匹配 Top 5","TG-8f3a...7c21","",Users,palette.cyan],["综合风险等级","高风险","风险评分 82 / 100",AlertTriangle,palette.red]].map(([t,v,s,Icon,c]) => <Card key={t}><div className="flex items-center gap-2 text-slate-400"><Icon size={18} style={{color:c}} />{t}</div><div className="mt-4 text-3xl font-bold" style={{color:c}}>{v}</div><p className="mt-2 text-sm text-slate-400">{s}</p><TinyLine color={c}/></Card>)}</div>
@@ -774,55 +816,72 @@ function WorkspacePage({ go }) {
   );
 }
 function iconsForStep(i) { const arr=[Folder,Zap,Shield,TableProperties,MessageCircle,Eye,Users,FileText]; const I=arr[i]||CircleDot; return <I/>; }
-function ConfigBox({ title, value, ok, select }) {
-  const content = <><p className="text-xs text-slate-400">{title}</p><div className="mt-1.5 flex items-center justify-between gap-2 font-medium">{typeof value === "string" ? <span>{value}</span> : value}{ok && <CheckCircle2 className="text-emerald-300" size={17}/>} {select && <ChevronDown size={15}/>}</div></>;
-  if (select) return <button type="button" onClick={() => toast(`${title} 选项已展开`)} className="tv-button w-full rounded-xl border border-cyan-300/15 bg-slate-950/30 p-3 text-left">{content}</button>;
-  return <div className="rounded-xl border border-cyan-300/15 bg-slate-950/30 p-3">{content}</div>;
+function ConfigBox({ title, value, ok, select, options }) {
+  const [selected, setSelected] = useState(typeof value === "string" ? value : "");
+  if (select) {
+    return (
+      <div className="rounded-xl border border-cyan-300/15 bg-slate-950/30 p-3">
+        <p className="mb-2 text-xs text-slate-400">{title}</p>
+        <SmallSelect label={selected || title} options={options || [selected || "完整检测", "快速检测", "完整检测", "仅分类"]} onChange={setSelected} />
+      </div>
+    );
+  }
+  return <div className="rounded-xl border border-cyan-300/15 bg-slate-950/30 p-3"><p className="text-xs text-slate-400">{title}</p><div className="mt-1.5 flex items-center justify-between gap-2 font-medium">{typeof value === "string" ? <span>{value}</span> : value}{ok && <CheckCircle2 className="text-emerald-300" size={17}/>}</div></div>;
 }
 
 function VpnPage({ go }) {
+  const [running, setRunning] = useState(false);
+  const [refreshedAt, setRefreshedAt] = useState("14:32:45");
+  const [showFeatures, setShowFeatures] = useState(false);
+  const startAnalysis = () => {
+    setRunning(true);
+    setTimeout(() => setRunning(false), 1600);
+  };
   return (
     <PageShell title="VPN 流量分析" actions={null}>
       <div className="grid grid-cols-[1fr_230px] gap-4">
         <div>
-          <Card className="mb-3"><div className="grid grid-cols-[80px_1fr_140px] items-center gap-4"><span>PCAP 文件</span><div className="rounded-lg border border-dashed border-cyan-300/25 bg-slate-950/35 p-4"><FileText className="mr-3 inline text-blue-300" />capture_20250519_142300.pcap <span className="ml-6 text-sm text-slate-400">大小：1.82 GB　流量时长：02:15:42　捕获时间：2025-05-19 14:23:00</span></div><Button icon={Play} onClick={()=>toast("VPN 分类任务已启动")}>开始分析</Button></div></Card>
+          <Card className="mb-3"><div className="grid grid-cols-[80px_1fr_140px] items-center gap-4"><span>PCAP 文件</span><div className="rounded-lg border border-dashed border-cyan-300/25 bg-slate-950/35 p-4"><FileText className="mr-3 inline text-blue-300" />capture_20250519_142300.pcap <span className="ml-6 text-sm text-slate-400">大小：1.82 GB　流量时长：02:15:42　捕获时间：2025-05-19 14:23:00</span><span className={cx("ml-4 rounded-md px-2 py-1 text-xs", running ? "bg-blue-500/20 text-blue-200" : "bg-emerald-500/15 text-emerald-300")}>{running ? "分析中" : "结果已就绪"}</span></div><Button icon={running ? RefreshCw : Play} onClick={startAnalysis}>{running ? "分析中" : "开始分析"}</Button></div></Card>
           <div className="grid grid-cols-4 gap-3"><StatCard title="VPN Ratio" value="72.8%" sub="3.6%" icon={Globe2} color={palette.cyan} spark={false}/><StatCard title="Non-VPN Ratio" value="27.2%" sub="2.4%" icon={Shield} color={palette.purple} spark={false}/><StatCard title="Total Flows" value="18,642" sub="1,842" icon={Layers3} color={palette.blue} spark={false}/><StatCard title="Confidence" value="93.6%" sub="1.8%" icon={ShieldCheck} color={palette.green} spark={false}/></div>
-          <div className="mt-3 grid grid-cols-[.8fr_1fr] gap-3"><Card><PanelTitle title="VPN / 非 VPN 分类" /><div className="grid grid-cols-[.9fr_.8fr] items-center"><Donut center={<><div>总流数</div><b className="text-2xl">18,642</b></>} data={[{value:72.8,color:palette.cyan},{value:27.2,color:palette.purple}]} /><Legend items={[["VPN 流量","72.8%","13,567 flows",palette.cyan],["非 VPN 流量","27.2%","5,075 flows",palette.purple]]}/></div></Card><Card><PanelTitle title="协议分布" /><BarChart items={[{label:"TLS 1.3",value:46.3,color:palette.cyan},{label:"QUIC",value:24.7,color:palette.blue},{label:"WireGuard",value:18.6,color:palette.purple},{label:"Unknown",value:10.4,color:palette.green}]} /></Card></div>
+          <div className="mt-3 grid grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] gap-3"><Card><PanelTitle title="VPN / 非 VPN 分类" /><div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,0.8fr)] items-center"><Donut center={<><div>总流数</div><b className="text-2xl">18,642</b></>} data={[{value:72.8,color:palette.cyan},{value:27.2,color:palette.purple}]} /><Legend items={[["VPN 流量","72.8%","13,567 flows",palette.cyan],["非 VPN 流量","27.2%","5,075 flows",palette.purple]]}/></div></Card><Card><PanelTitle title="协议分布" /><BarChart items={[{label:"TLS 1.3",value:46.3,color:palette.cyan},{label:"QUIC",value:24.7,color:palette.blue},{label:"WireGuard",value:18.6,color:palette.purple},{label:"Unknown",value:10.4,color:palette.green}]} /></Card></div>
           <Card className="mt-3"><PanelTitle title="流量趋势（按分类）" right={<SmallSelect label="近 2 小时" />} /><AreaLine height={170} color={palette.blue}/></Card>
-          <Card className="mt-3"><div className="mb-3 flex items-center justify-between"><PanelTitle title="流量分类结果" /><div className="flex gap-2"><div className="rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-sm text-slate-500"><Search size={15} className="mr-2 inline" />搜索 Flow ID / IP / 协议...</div><SmallSelect label="全部" /><Button variant="ghost" icon={RefreshCw} onClick={()=>toast("表格已刷新")} /></div></div><DataTable columns={["Flow ID","Source","Destination","Protocol","Packet Count","VPN Probability","Prediction","Confidence"]} rows={flowRows} renderCell={(c,j)=> j===6 ? <span className={cx("rounded-md border px-2 py-1 text-xs", c==="VPN" ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300" : "border-purple-400/30 bg-purple-400/10 text-purple-300")}>{c}</span> : c}/><Pagination total="共 18,642 条" /></Card>
+          <Card className="mt-3"><div className="mb-3 flex items-center justify-between"><PanelTitle title={`流量分类结果 · ${refreshedAt}`} /><div className="flex flex-wrap gap-2"><div className="rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-sm text-slate-500"><Search size={15} className="mr-2 inline" />搜索 Flow ID / IP / 协议...</div><SmallSelect label="全部" options={["全部","VPN","非 VPN","高置信度"]} /><Button variant="ghost" icon={RefreshCw} onClick={()=>setRefreshedAt(new Date().toLocaleTimeString("zh-CN", { hour12: false }))}>刷新表格</Button></div></div><DataTable columns={["Flow ID","Source","Destination","Protocol","Packet Count","VPN Probability","Prediction","Confidence"]} rows={flowRows} renderCell={(c,j)=> j===6 ? <span className={cx("rounded-md border px-2 py-1 text-xs", c==="VPN" ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300" : "border-purple-400/30 bg-purple-400/10 text-purple-300")}>{c}</span> : c}/><Pagination total="共 18,642 条" /></Card>
         </div>
-        <div className="space-y-3"><Card><PanelTitle title="模型解释" />{[["连接时长","28.3%"],["数据包方向比例","21.7%"],["TLS 握手特征","17.9%"],["JA3/JA4 指纹","14.2%"],["端口/协议组合","9.8%"]].map(([a,b]) => <div key={a} className="mb-4"><div className="mb-1 flex justify-between text-sm"><span>{a}</span><span>{b}</span></div><div className="h-1.5 rounded bg-slate-800"><div className="h-full rounded bg-blue-400" style={{width:b}} /></div></div>)}<div className="mt-6 space-y-3 text-sm text-slate-400">{[["模型名称","TV-VPN-Classifier"],["模型版本","v2.4.1"],["训练数据量","18.7M flows"],["特征维度","128"]].map(r => <div className="flex justify-between" key={r[0]}><span>{r[0]}</span><b className="text-slate-300">{r[1]}</b></div>)}</div><button onClick={()=>toast("已打开完整特征列表")} className="mt-5 text-cyan-300">查看完整特征列表 →</button></Card><Button className="w-full" variant="ghost" icon={Download} onClick={()=>downloadText("filtered_vpn_traffic.pcap","mock pcap data")}>保存 VPN 流量</Button><Button className="w-full" variant="ghost" icon={FileDown} onClick={()=>downloadText("vpn_classification.csv","flow_id,prediction,confidence\nflow_000001,VPN,98.7%","text/csv")}>导出分类结果</Button><Button className="w-full" variant="ghost" icon={BarChart3} onClick={()=>go("sim")}>进入 SIM 分析</Button></div>
+        <div className="space-y-3"><Card><PanelTitle title="模型解释" />{[["连接时长","28.3%"],["数据包方向比例","21.7%"],["TLS 握手特征","17.9%"],["JA3/JA4 指纹","14.2%"],["端口/协议组合","9.8%"]].map(([a,b]) => <div key={a} className="mb-4"><div className="mb-1 flex justify-between text-sm"><span>{a}</span><span>{b}</span></div><div className="h-1.5 rounded bg-slate-800"><div className="h-full rounded bg-blue-400" style={{width:b}} /></div></div>)}<div className="mt-6 space-y-3 text-sm text-slate-400">{[["模型名称","TV-VPN-Classifier"],["模型版本","v2.4.1"],["训练数据量","18.7M flows"],["特征维度","128"]].map(r => <div className="flex justify-between" key={r[0]}><span>{r[0]}</span><b className="text-slate-300">{r[1]}</b></div>)}</div>{showFeatures && <div className="mt-4 rounded-lg border border-cyan-300/15 bg-slate-950/35 p-3 text-xs text-slate-300">{["flow_duration","packet_direction_ratio","tls_ja3_hash","quic_spin_bit","burst_interval","payload_entropy"].map((x)=><div key={x} className="mb-1 flex justify-between"><span>{x}</span><span className="text-cyan-300">enabled</span></div>)}</div>}<button type="button" onClick={()=>setShowFeatures((v)=>!v)} className="mt-5 text-cyan-300">{showFeatures ? "收起完整特征列表" : "查看完整特征列表"} →</button></Card><Button className="w-full" variant="ghost" icon={Download} onClick={()=>downloadText("filtered_vpn_traffic.pcap","mock pcap data")}>保存 VPN 流量</Button><Button className="w-full" variant="ghost" icon={FileDown} onClick={()=>downloadText("vpn_classification.csv","flow_id,prediction,confidence\nflow_000001,VPN,98.7%","text/csv")}>导出分类结果</Button><Button className="w-full" variant="ghost" icon={BarChart3} onClick={()=>go("sim")}>进入 SIM 分析</Button></div>
       </div>
     </PageShell>
   );
 }
 
 function SimPage({ go }) {
+  const [savedApps, setSavedApps] = useState([]);
   const exports = [["Telegram","175.86 GB","2",palette.blue],["WhatsApp","65.21 GB","2",palette.green],["Signal","38.84 GB","1",palette.purple],["WeChat","24.04 GB","1",palette.green],["QQ","15.10 GB","1",palette.amber],["Unknown","71.31 GB","2","#94a3b8"]];
+  const saveTelegram = () => setSavedApps((prev) => prev.includes("Telegram") ? prev : [...prev, "Telegram"]);
   return (
     <PageShell title="SIM 流量分析系统" subtitle="对过滤后的 VPN 流量进行 IM 应用识别与置信度评估">
       <Card className="mb-4"><div className="grid grid-cols-4 divide-x divide-cyan-300/10 text-sm"><div><span className="text-slate-400">当前任务</span><b className="ml-4">#20250519-001</b></div><div><span className="text-slate-400">过滤后的 VPN 流量文件</span><b className="ml-4 text-cyan-300">filtered_sim_traffic.pcap</b><span className="ml-4">712.31 GB</span><span className="ml-4 text-emerald-300">已加载</span></div><div><span className="text-slate-400">任务开始时间</span><b className="ml-4">2025-05-19 13:41:02</b></div><div><span className="text-slate-400">任务耗时</span><b className="ml-4">00:51:42</b></div></div></Card>
       <div className="grid grid-cols-4 gap-4"><StatCard title="SIM 占比" value="43.4%" sub="" icon={PieChart} color={palette.blue} spark={false}/><StatCard title="Top 应用" value="Telegram" sub="24.7%" icon={MessageCircle} color={palette.blue} spark={false}/><StatCard title="最高置信度" value="99.3%" sub="" icon={CheckCircle2} color={palette.green} spark={false}/><StatCard title="已保存流量数" value="6" sub="" icon={Save} color={palette.purple} spark={false}/></div>
-      <div className="mt-4 grid grid-cols-[.8fr_1.2fr] gap-4"><Card><PanelTitle title="SIM / 非 SIM 分类" /><div className="grid grid-cols-[.9fr_1fr] items-center"><Donut center={<><div>总流量</div><b className="text-xl">712.31 GB</b></>} data={[{value:43.4,color:palette.blue},{value:56.6,color:"#cbd5e1"}]} /><Legend items={[["SIM 流量","307.89 GB","43.4%",palette.blue],["非 SIM 流量","404.42 GB","56.6%","#cbd5e1"]]} /></div><div className="mt-3 rounded-lg border border-cyan-300/10 p-3 text-center text-cyan-300">SIM 流量占比：43.4% (307.89 GB)</div></Card><Card><PanelTitle title="IM 应用识别分布" right={<SmallSelect label="按流量占比" />} /><BarChart items={[{label:"Telegram",value:24.7,color:palette.blue},{label:"WhatsApp",value:18.3,color:palette.cyan},{label:"Signal",value:12.6,color:palette.purple},{label:"WeChat",value:7.8,color:palette.green},{label:"QQ",value:4.9,color:palette.amber},{label:"Unknown",value:31.7,color:"#cbd5e1"}]} /></Card></div>
-      <div className="mt-4 grid grid-cols-[1.3fr_.6fr] gap-4"><Card><PanelTitle title="应用识别概率" /><DataTable columns={["Flow ID","Top1","Top1 Probability","Top2","Top2 Probability","Telegram","WhatsApp","Signal","Prediction"]} rows={simRows} renderCell={(c,j)=> j>=5&&j<=7 ? <span className="block rounded bg-blue-500/20 px-2 py-1 text-center text-blue-100">{c}</span> : j===8 ? <span className="font-bold text-cyan-300">{c}</span> : c}/><Pagination total="共 25,684 条" /></Card><Card><PanelTitle title="分类导出文件管理" /><DataTable columns={["应用类型","流量大小","文件数量","操作"]} rows={exports.map(e=>[e[0],e[1],e[2],"下载"])} renderCell={(c,j,r)=> j===0 ? <span className="flex items-center gap-2"><i className="h-3 w-3 rounded-full" style={{background: exports.find(e=>e[0]===c)?.[3]}} />{c}</span> : j===3 ? <button onClick={()=>downloadText(`${r[0]}.pcap`,"mock pcap")} className="text-cyan-300"><Download size={16}/></button> : c}/><div className="mt-4 flex justify-between font-bold"><span>合计</span><span>390.36 GB</span><span>9</span></div></Card></div>
-      <Card className="mt-4"><div className="grid grid-cols-3 gap-6"><Button variant="ghost" icon={FileText} onClick={()=>toast("Telegram 流量已保存")}>保存 Telegram 流量</Button><Button icon={ArrowRight} onClick={()=>go("behavior")}>进入行为嗅探</Button><Button variant="ghost" icon={Download} onClick={()=>downloadText("filtered_sim_traffic.pcap","mock pcap")}>导出 filtered_sim_traffic.pcap</Button></div></Card>
+      <div className="mt-4 grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-4"><Card><PanelTitle title="SIM / 非 SIM 分类" /><div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] items-center"><Donut center={<><div>总流量</div><b className="text-xl">712.31 GB</b></>} data={[{value:43.4,color:palette.blue},{value:56.6,color:"#cbd5e1"}]} /><Legend items={[["SIM 流量","307.89 GB","43.4%",palette.blue],["非 SIM 流量","404.42 GB","56.6%","#cbd5e1"]]} /></div><div className="mt-3 rounded-lg border border-cyan-300/10 p-3 text-center text-cyan-300">SIM 流量占比：43.4% (307.89 GB)</div></Card><Card><PanelTitle title="IM 应用识别分布" right={<SmallSelect label="按流量占比" options={["按流量占比","按置信度","按文件数量"]} />} /><BarChart showAppIcons items={[{label:"Telegram",value:24.7,color:appMeta.Telegram.color},{label:"WhatsApp",value:18.3,color:appMeta.WhatsApp.color},{label:"Signal",value:12.6,color:appMeta.Signal.color},{label:"WeChat",value:7.8,color:appMeta.WeChat.color},{label:"QQ",value:4.9,color:appMeta.QQ.color},{label:"Unknown",value:31.7,color:appMeta.Unknown.color}]} /></Card></div>
+      <div className="mt-4 grid grid-cols-[minmax(0,1.3fr)_minmax(0,0.6fr)] gap-4"><Card><PanelTitle title="应用识别概率" /><DataTable columns={["Flow ID","Top1","Top1 Probability","Top2","Top2 Probability","Telegram","WhatsApp","Signal","Prediction"]} rows={simRows} renderCell={(c,j)=> j>=5&&j<=7 ? <span className="block rounded bg-blue-500/20 px-2 py-1 text-center text-blue-100">{c}</span> : j===8 ? <span className="font-bold text-cyan-300">{c}</span> : c}/><Pagination total="共 25,684 条" /></Card><Card><PanelTitle title="分类导出文件管理" /><DataTable columns={["应用类型","流量大小","文件数量","操作"]} rows={exports.map(e=>[e[0],e[1],e[2],"下载"])} renderCell={(c,j,r)=> j===0 ? <span className="flex items-center gap-2"><i className="h-3 w-3 rounded-full" style={{background: exports.find(e=>e[0]===c)?.[3]}} />{c}</span> : j===3 ? <button onClick={()=>downloadText(`${r[0]}.pcap`,"mock pcap")} className="text-cyan-300"><Download size={16}/></button> : c}/><div className="mt-4 flex justify-between font-bold"><span>合计</span><span>390.36 GB</span><span>9</span></div></Card></div>
+      <Card className="mt-4"><div className="grid grid-cols-3 gap-6"><Button variant="ghost" icon={FileText} onClick={saveTelegram}>{savedApps.includes("Telegram") ? "Telegram 已保存" : "保存 Telegram 流量"}</Button><Button icon={ArrowRight} onClick={()=>go("behavior")}>进入行为嗅探</Button><Button variant="ghost" icon={Download} onClick={()=>downloadText("filtered_sim_traffic.pcap","mock pcap")}>导出 filtered_sim_traffic.pcap</Button></div></Card>
     </PageShell>
   );
 }
 
 function BehaviorPage({ go }) {
   const [detail, setDetail] = useState(true);
+  const [fullDetail, setFullDetail] = useState(false);
   const cards = [[MessageCircle,"chat","52.6%","主要预测",palette.blue],[Image,"photo","21.3%","次要预测",palette.cyan],[FileText,"file","11.4%","",palette.amber],[Mic,"voice","7.2%","",palette.purple],[Video,"video","4.5%","",palette.red]];
   return (
     <PageShell title={<span>用户行为嗅探 <span className="ml-2 rounded-md bg-blue-500/20 px-2 text-base text-cyan-300">P08</span></span>} subtitle="当前输入文件： capture_20250519_142815.pcap　(1.82 GB)" actions={<Button variant="ghost" onClick={()=>go("group")}>进入群组匹配</Button>}>
       <div className={cx("grid gap-4", detail ? "grid-cols-[1fr_360px]" : "grid-cols-1")}>
         <div>
           <Card><div className="grid grid-cols-[1fr_520px] items-center gap-5"><div><h3 className="mb-3 text-lg font-bold"><Shield className="mr-2 inline text-cyan-300" />基于流量图特征的加密流量用户行为分析</h3><p className="text-sm leading-7 text-slate-400">本方法将加密流量按时间顺序转换为包级流量图，提取时序与拓扑特征，并通过图神经网络（GNN）进行推理，输出各类用户行为的概率分布。</p></div><div className="flex items-center justify-between">{[[Network,"构建包级流量图"],[Activity,"提取时序特征"],[Brain,"GNN 推理"],[PieChart,"生成行为概率"]].map(([Icon,t],i)=><React.Fragment key={t}><div className="relative rounded-xl border border-cyan-300/18 bg-slate-900/40 p-4 text-center"><span className="absolute -top-3 left-1/2 grid h-6 w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-500 text-sm">{i+1}</span><Icon className="mx-auto mb-2 text-cyan-300" /><span className="text-xs">{t}</span></div>{i<3 && <ArrowRight className="text-cyan-500"/>}</React.Fragment>)}</div></div></Card>
-          <div className="mt-4 grid grid-cols-[.9fr_1.1fr] gap-4"><Card><PanelTitle title="行为概率" /><RadarChart /></Card><Card><PanelTitle title="行为概率排名" /><div className="space-y-4 p-4">{[["chat",52.6,MessageCircle,palette.blue],["photo",21.3,Image,palette.cyan],["file",11.4,FileText,palette.green],["voice",7.2,Mic,palette.purple],["video",4.5,Video,palette.amber],["idle",1.8,Clock,"#94a3b8"],["unknown",1.2,Hash,"#64748b"]].map(([t,v,Icon,c],i)=><div key={t} className="grid grid-cols-[34px_100px_1fr_60px] items-center gap-3"><span>{i+1}</span><span className="flex items-center gap-2"><Icon size={20} style={{color:c}} />{t}</span><div className="h-3 rounded bg-slate-800"><div className="h-full rounded" style={{width:`${v/60*100}%`,background:c}} /></div><b>{v}%</b></div>)}</div></Card></div>
+          <div className="mt-4 grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4"><Card><PanelTitle title="行为概率" /><RadarChart /></Card><Card><PanelTitle title="行为概率排名" /><div className="space-y-4 p-4">{[["chat",52.6,MessageCircle,palette.blue],["photo",21.3,Image,palette.cyan],["file",11.4,FileText,palette.green],["voice",7.2,Mic,palette.purple],["video",4.5,Video,palette.amber],["idle",1.8,Clock,"#94a3b8"],["unknown",1.2,Hash,"#64748b"]].map(([t,v,Icon,c],i)=><div key={t} className="grid grid-cols-[34px_100px_1fr_60px] items-center gap-3"><span>{i+1}</span><span className="flex items-center gap-2"><Icon size={20} style={{color:c}} />{t}</span><div className="h-3 rounded bg-slate-800"><div className="h-full rounded" style={{width:`${v/60*100}%`,background:c}} /></div><b>{v}%</b></div>)}</div></Card></div>
           <div className="mt-4 grid grid-cols-6 gap-3">{[["最可能行为","chat","52.6%"],["行为置信度","0.783","高置信度"],["样本数量","12,846","条流记录"],["平均包长","486.7 B","标准差 312.8 B"],["平均间隔","152.3 ms","标准差 210.6 ms"],["持续时间","00:26:48","hh:mm:ss"]].map(([t,v,s]) => <Card key={t} className="text-center"><p className="text-slate-400">{t}</p><h3 className="mt-2 text-2xl font-bold">{v}</h3><p className="mt-1 text-sm text-slate-400">{s}</p></Card>)}</div>
-          <Card className="mt-4"><PanelTitle title="实例结果" /><div className="flex gap-4 overflow-x-auto pb-2">{cards.map(([Icon,t,v,tag,c],i)=><button key={t} onClick={()=>setDetail(true)} className={cx("min-w-[170px] rounded-xl border bg-slate-950/35 p-4 text-left", i===0 ? "border-blue-400 shadow-[0_0_20px_rgba(20,136,255,.22)]" : "border-cyan-300/15") }><div className="mb-2 flex justify-between"><Icon style={{color:c}} /><span className="rounded bg-slate-800 px-2 text-xs">{tag || "..."}</span></div><div className="text-2xl font-bold">{t}</div><div className="text-2xl">{v}</div><div className="mt-4 border-t border-cyan-300/10 pt-3 text-sm text-slate-400"><p>置信度　{[.783,.612,.481,.362,.271][i]}</p><p>样本数　12,846</p></div><Button variant="ghost" className="mt-3 w-full py-1.5">查看详情</Button></button>)}</div></Card>
+          <Card className="mt-4"><PanelTitle title="实例结果" /><div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 pb-2">{cards.map(([Icon,t,v,tag,c],i)=><button key={t} onClick={()=>setDetail(true)} className={cx("rounded-xl border bg-slate-950/35 p-4 text-left", i===0 ? "border-blue-400 shadow-[0_0_20px_rgba(20,136,255,.22)]" : "border-cyan-300/15") }><div className="mb-2 flex justify-between"><Icon style={{color:c}} /><span className="rounded bg-slate-800 px-2 text-xs">{tag || "..."}</span></div><div className="text-2xl font-bold">{t}</div><div className="text-2xl">{v}</div><div className="mt-4 border-t border-cyan-300/10 pt-3 text-sm text-slate-400"><p>置信度　{[.783,.612,.481,.362,.271][i]}</p><p>样本数　12,846</p></div><span className="tv-button mt-3 inline-flex w-full items-center justify-center rounded-lg border border-cyan-300/15 bg-slate-900/40 px-3 py-1.5 text-sm font-semibold text-cyan-200">查看详情</span></button>)}</div></Card>
         </div>
-        {detail && <Card className="rounded-none border-y-0 border-r-0"><div className="mb-5 flex justify-between"><h3 className="text-xl font-bold">实例详情</h3><button onClick={()=>setDetail(false)}><X /></button></div><div className="space-y-3 text-sm">{[["主要预测","chat (52.6%)"],["文件","capture_20250519_142815.pcap"],["时间范围","2025-05-19 14:02:15 ~ 14:28:63"],["持续时间","00:26:48"],["样本数量","12,846"]].map(r => <div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div><SideChart title="包长序列" color={palette.blue}/><SideChart title="时间间隔序列" color={palette.purple}/><PanelTitle title="流量方向分布" /><Donut size={145} center={<><div>总流量</div><b>1.82 TB</b></>} data={[{value:53.1,color:palette.blue},{value:44.7,color:palette.cyan},{value:2.2,color:palette.purple}]} /><div className="mt-4 space-y-3 text-sm">{[["流量图节点数（均值）","213.6"],["流量图边数（均值）","1,248.7"],["流量图密度（均值）","0.027"],["连接持续时间（均值）","18.6 s"],["突发数（均值）","24.3"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div><Button className="mt-6 w-full" onClick={()=>toast("已打开完整实例详情")}>查看完整详情</Button></Card>}
+        {detail && <Card className="rounded-none border-y-0 border-r-0"><div className="mb-5 flex justify-between"><h3 className="text-xl font-bold">实例详情</h3><button onClick={()=>setDetail(false)}><X /></button></div><div className="space-y-3 text-sm">{[["主要预测","chat (52.6%)"],["文件","capture_20250519_142815.pcap"],["时间范围","2025-05-19 14:02:15 ~ 14:28:63"],["持续时间","00:26:48"],["样本数量","12,846"]].map(r => <div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div><SideChart title="包长序列" color={palette.blue}/><SideChart title="时间间隔序列" color={palette.purple}/><PanelTitle title="流量方向分布" /><Donut size={145} center={<><div>总流量</div><b>1.82 TB</b></>} data={[{value:53.1,color:palette.blue},{value:44.7,color:palette.cyan},{value:2.2,color:palette.purple}]} /><div className="mt-4 space-y-3 text-sm">{[["流量图节点数（均值）","213.6"],["流量图边数（均值）","1,248.7"],["流量图密度（均值）","0.027"],["连接持续时间（均值）","18.6 s"],["突发数（均值）","24.3"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div>{fullDetail && <div className="mt-4 rounded-lg border border-cyan-300/15 bg-slate-950/35 p-3 text-sm text-slate-300"><p>判定依据：短间隔小包密集、上行消息段占比 61.8%、会话保持时间稳定。</p><p className="mt-2">建议动作：进入群组匹配页联查设备、公共群组与历史会话。</p></div>}<Button className="mt-6 w-full" onClick={()=>setFullDetail((v)=>!v)}>{fullDetail ? "收起完整详情" : "查看完整详情"}</Button></Card>}
       </div>
     </PageShell>
   );
@@ -832,11 +891,23 @@ function SideChart({ title, color }) { return <div className="mt-5 rounded-xl bo
 
 function GroupPage({ go }) {
   const [selected, setSelected] = useState("Group_Bravo");
+  const [refreshedAt, setRefreshedAt] = useState("14:32:45");
+  const [graphFullscreen, setGraphFullscreen] = useState(false);
+  const [graphSettingsOpen, setGraphSettingsOpen] = useState(false);
+  const [graphLayout, setGraphLayout] = useState("物理布局");
+  const copyTaskId = async () => {
+    try {
+      await navigator.clipboard?.writeText("T20250519001");
+    } catch {
+      // Browser clipboard permission may be unavailable in local previews.
+    }
+    toast("任务 ID 已复制");
+  };
   return (
-    <PageShell title="公共群组匹配" subtitle="基于多源特征与关系图谱的群组关联分析与溯源追踪" actions={<><Button variant="ghost" icon={Copy}>任务 ID：T20250519001</Button><Button icon={FileText} onClick={()=>go("reports")}>导出报告</Button></>}>
+    <PageShell title="公共群组匹配" subtitle="基于多源特征与关系图谱的群组关联分析与溯源追踪" actions={<><Button variant="ghost" icon={Copy} onClick={copyTaskId}>任务 ID：T20250519001</Button><Button icon={FileText} onClick={()=>go("reports")}>导出报告</Button></>}>
       <div className="grid grid-cols-4 gap-4"><StatCard title="匹配群组数量" value="128" sub="18.5%" icon={Folder} color={palette.blue}/><StatCard title="高危群组数量" value="23" sub="27.8%" icon={Users} color={palette.amber}/><StatCard title="最高置信度" value="98.7%" sub="1.6%" icon={CircleDot} color={palette.cyan}/><StatCard title="关联设备数量" value="2,436" sub="15.3%" icon={Server} color={palette.purple}/></div>
-      <div className="mt-4 grid grid-cols-[1.15fr_.85fr] gap-4"><Card><div className="mb-4 flex justify-between"><PanelTitle title="用户-设备-群组三维关系图谱" /><div className="flex gap-2"><SmallSelect label="物理布局" /><Button variant="ghost" icon={Maximize2} /><Button variant="ghost" icon={Settings} /></div></div><RelationGraph selected={selected} setSelected={setSelected} /><div className="mt-4 flex justify-center gap-7 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-3 text-sm text-slate-300"><span>→ uses</span><span className="text-cyan-300">···· communicates</span><span className="text-slate-400">-- belongs_to</span><span className="text-orange-300">→ matches</span><span className="text-green-300">···· correlates</span></div></Card><div className="space-y-4"><Card><h3 className="mb-3 font-bold">当前选中：<span className="text-white">{selected}</span> <RiskTag level="高危" /></h3><div className="grid grid-cols-[1fr_180px] gap-3"><div className="space-y-2 text-sm">{[["平台","Telegram"],["Group ID","-1002456893172"],["成员数量","1,274"],["创建时间","2024-11-03 18:22:11"],["简介","匿名情报交流与资源共享频道"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}：</span><span>{r[1]}</span></div>)}</div><GaugeCircle value={92.4}/></div>{[["时间模式相似度",91],["包长分布相似度",86],["跨协议交互特征",88]].map(([t,v])=><div className="mt-3" key={t}><div className="mb-1 flex justify-between text-sm"><span>{t}</span><span>0.{v}</span></div><div className="h-2 rounded bg-slate-800"><div className="h-full rounded bg-gradient-to-r from-blue-500 to-green-400" style={{width:`${v}%`}} /></div></div>)}</Card><Card><PanelTitle title="证据链" />{["User_9c8f 使用 Device_C3D4","Device_C3D4 与 Flow_c2b3 通信","Flow_c2b3 匹配到 Group_Bravo","Group_Bravo 存在于 Telegram","与历史流量模式高度相似"].map((x,i)=><div key={x} className="mb-3 grid grid-cols-[90px_1fr_70px] items-center gap-3 text-sm"><span className="text-cyan-300">14:{38+i*5}:12</span><span>{x}</span><span className="text-emerald-300">0.9{i}</span></div>)}</Card></div></div>
-      <Card className="mt-4"><div className="mb-3 flex items-center justify-between"><PanelTitle title="群组匹配结果" /><div className="flex gap-3"><SmallSelect label="风险等级：全部" /><div className="rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-sm text-slate-500"><Search size={15} className="mr-2 inline" />搜索 Group ID / Name</div><Button variant="ghost" icon={RefreshCw} onClick={()=>toast("群组表格已刷新")} /></div></div><DataTable columns={["Group ID","Group Name","Platform","匹配概率","风险等级","证据数量","Last Active Time"]} rows={groupRows} renderCell={(c,j,r)=> j===1 ? <button onClick={()=>setSelected(c)} className="text-left text-cyan-200">{c}</button> : j===3 ? <div className="flex items-center gap-2"><span>{c}</span><div className="h-2 w-24 rounded bg-slate-800"><div className="h-full rounded bg-blue-400" style={{width:c}} /></div></div> : j===4 ? <RiskTag level={c}/> : c}/><Pagination total="共 128 条" /></Card>
+      <div className={cx("mt-4 grid gap-4", graphFullscreen ? "grid-cols-1" : "grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]")}><Card><div className="mb-4 flex flex-wrap justify-between gap-2"><PanelTitle title={`用户-设备-群组三维关系图谱 · ${graphLayout}`} /><div className="flex flex-wrap gap-2"><SmallSelect label={graphLayout} options={["物理布局","风险优先","平台聚类"]} onChange={setGraphLayout} /><Button variant="ghost" icon={Maximize2} onClick={()=>setGraphFullscreen((v)=>!v)}>{graphFullscreen ? "退出全屏" : "全屏"}</Button><Button variant="ghost" icon={Settings} onClick={()=>setGraphSettingsOpen((v)=>!v)}>{graphSettingsOpen ? "收起配置" : "配置"}</Button></div></div>{graphSettingsOpen && <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-3 text-sm"><SwitchRow label="显示证据连线" /><SwitchRow label="突出高危节点" /><SwitchRow label="自动聚焦选中群组" /></div>}<RelationGraph selected={selected} setSelected={setSelected} /><div className="mt-4 flex flex-wrap justify-center gap-4 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-3 text-sm text-slate-300"><span>→ uses</span><span className="text-cyan-300">···· communicates</span><span className="text-slate-400">-- belongs_to</span><span className="text-orange-300">→ matches</span><span className="text-green-300">···· correlates</span></div></Card>{!graphFullscreen && <div className="space-y-4"><Card><h3 className="mb-3 font-bold">当前选中：<span className="text-white">{selected}</span> <RiskTag level="高危" /></h3><div className="grid grid-cols-[1fr_180px] gap-3"><div className="space-y-2 text-sm">{[["平台","Telegram"],["Group ID","-1002456893172"],["成员数量","1,274"],["创建时间","2024-11-03 18:22:11"],["简介","匿名情报交流与资源共享频道"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}：</span><span>{r[1]}</span></div>)}</div><GaugeCircle value={92.4}/></div>{[["时间模式相似度",91],["包长分布相似度",86],["跨协议交互特征",88]].map(([t,v])=><div className="mt-3" key={t}><div className="mb-1 flex justify-between text-sm"><span>{t}</span><span>0.{v}</span></div><div className="h-2 rounded bg-slate-800"><div className="h-full rounded bg-gradient-to-r from-blue-500 to-green-400" style={{width:`${v}%`}} /></div></div>)}</Card><Card><PanelTitle title="证据链" />{["User_9c8f 使用 Device_C3D4","Device_C3D4 与 Flow_c2b3 通信","Flow_c2b3 匹配到 Group_Bravo","Group_Bravo 存在于 Telegram","与历史流量模式高度相似"].map((x,i)=><div key={x} className="mb-3 grid grid-cols-[90px_1fr_70px] items-center gap-3 text-sm"><span className="text-cyan-300">14:{38+i*5}:12</span><span>{x}</span><span className="text-emerald-300">0.9{i}</span></div>)}</Card></div>}</div>
+      <Card className="mt-4"><div className="mb-3 flex items-center justify-between"><PanelTitle title={`群组匹配结果 · ${refreshedAt}`} /><div className="flex flex-wrap gap-3"><SmallSelect label="风险等级：全部" options={["风险等级：全部","严重","高危","中危","低危"]}/><div className="rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-sm text-slate-500"><Search size={15} className="mr-2 inline" />搜索 Group ID / Name</div><Button variant="ghost" icon={RefreshCw} onClick={()=>setRefreshedAt(new Date().toLocaleTimeString("zh-CN", { hour12: false }))}>刷新表格</Button></div></div><DataTable columns={["Group ID","Group Name","Platform","匹配概率","风险等级","证据数量","Last Active Time"]} rows={groupRows} renderCell={(c,j,r)=> j===1 ? <button onClick={()=>setSelected(c)} className="text-left text-cyan-200">{c}</button> : j===3 ? <div className="flex items-center gap-2"><span>{c}</span><div className="h-2 w-24 rounded bg-slate-800"><div className="h-full rounded bg-blue-400" style={{width:c}} /></div></div> : j===4 ? <RiskTag level={c}/> : c}/><Pagination total="共 128 条" /></Card>
     </PageShell>
   );
 }
@@ -844,10 +915,14 @@ function GaugeCircle({ value }) { return <div className="text-center"><Donut siz
 function RelationGraph({ selected, setSelected }) { const nodes=[ ["User_7a21",50,95,palette.blue], ["User_9c8f",50,170,palette.blue], ["User_b4f2",50,245,palette.blue], ["User_e3a7",50,320,palette.blue], ["Device_A1B2",180,80,palette.cyan], ["Device_C3D4",180,160,palette.cyan], ["Device_E5F6",180,240,palette.cyan], ["Device_G7H8",180,320,palette.cyan], ["Flow_f9a1",340,85,palette.purple], ["Flow_c2b3",340,165,palette.purple], ["Flow_a6c7",340,245,palette.purple], ["Flow_b8d9",340,325,palette.purple], ["Group_Alpha",520,90,"#f97316"], ["Group_Bravo",520,210,"#f97316"], ["Group_Delta",520,325,"#f97316"], ["Telegram",720,80,palette.green], ["WhatsApp",720,210,palette.green], ["Signal",720,330,palette.green] ]; return <svg viewBox="0 0 800 420" className="h-[420px] w-full rounded-xl bg-slate-950/25">{nodes.slice(0,12).map((n,i)=><line key={i} x1={n[1]+20} y1={n[2]} x2={nodes[(i+4)%12+4]?.[1]||520} y2={nodes[(i+4)%12+4]?.[2]||210} stroke="rgba(24,213,255,.35)" />)}{[[340,85,520,210],[340,165,520,210],[340,245,520,210],[340,325,520,210],[520,210,720,80],[520,210,720,210],[520,210,720,330],[520,90,720,80],[520,325,720,330]].map((l,i)=><line key={`m${i}`} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} stroke={i<4?"#fb923c":"#22c55e"} strokeDasharray="7 5" opacity=".8"/>)}{nodes.map(([t,x,y,c])=><g key={t} onClick={()=> t.includes("Group") && setSelected(t)} className="cursor-pointer"><circle cx={x} cy={y} r={t===selected?33:24} fill={c} opacity={t === selected ? 0.8 : 0.35} stroke={t===selected?"#fff":c} strokeWidth="2"/><text x={x} y={y+45} fill="#cbd5e1" fontSize="13" textAnchor="middle">{t}</text></g>)}</svg>; }
 
 function ReportsPage({ selectedReport, setSelectedReport }) {
+  const [fullscreen, setFullscreen] = useState(false);
+  const [riskFilter, setRiskFilter] = useState("全部风险等级");
+  const [dateRange, setDateRange] = useState("近 30 日");
   const exportReport = (kind) => downloadText(`TrafficVigil_Report.${kind.toLowerCase()}`, `TrafficVigil 分析报告\n报告编号：${selectedReport[0]}\n风险等级：${selectedReport[4]}`);
+  const filteredReports = riskFilter === "全部风险等级" ? reports : reports.filter((report) => report[4] === riskFilter);
   return (
     <PageShell title="分析报告中心" subtitle="集中管理与查看所有分析任务生成的报告" actions={<><Button variant="ghost" icon={FileDown} onClick={()=>exportReport("PDF")}>导出 PDF</Button><Button variant="ghost" icon={FileSpreadsheet} onClick={()=>exportReport("CSV")}>导出 CSV</Button><Button variant="ghost" icon={FileJson} onClick={()=>exportReport("JSON")}>导出 JSON</Button></>}>
-      <div className="grid grid-cols-[420px_1fr] gap-4"><Card><div className="mb-4 grid grid-cols-2 gap-3"><SmallSelect label="全部风险等级"/><SmallSelect label="全部任务类型"/><Button variant="ghost" icon={Calendar}>开始日期 → 结束日期</Button><Button variant="ghost" icon={RefreshCw}>重置</Button></div><p className="mb-4 text-sm text-slate-400">共 126 条报告</p><div className="space-y-3">{reports.map(r=><button key={r[0]} onClick={()=>setSelectedReport(r)} className={cx("w-full rounded-xl border p-4 text-left transition", selectedReport[0]===r[0]?"border-blue-400 bg-blue-500/15":"border-cyan-300/15 bg-slate-950/25 hover:bg-cyan-400/5")}><div className="flex justify-between"><span className="text-sm text-slate-400">{r[0]}</span><RiskTag level={r[4]}/></div><h3 className="mt-2 text-lg font-bold">{r[1]}</h3><p className="mt-2 text-sm text-slate-400">{r[2]} · {r[3]} <span className="float-right text-cyan-300">查看详情 ›</span></p></button>)}</div><Pagination total="" /></Card><Card><div className="mb-3 flex justify-between"><PanelTitle title="报告预览" /><div className="flex gap-2"><Button variant="ghost" icon={Printer} onClick={()=>window.print()}>打印</Button><Button variant="ghost" icon={Maximize2} onClick={()=>toast("已进入全屏预览模式")}>全屏查看</Button></div></div><ReportPreview report={selectedReport} /></Card></div>
+      <div className={cx("grid gap-4", fullscreen ? "grid-cols-1" : "grid-cols-[360px_1fr]")}><Card className={cx(fullscreen && "hidden")}><div className="mb-4 grid grid-cols-2 gap-3"><SmallSelect label={riskFilter} options={["全部风险等级","严重","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label="全部任务类型" options={["全部任务类型","完整检测","快速检测","报告生成"]}/><SmallSelect label={dateRange} options={["今日","近 7 日","近 30 日"]} onChange={setDateRange}/><Button variant="ghost" icon={RefreshCw} onClick={()=>{ setRiskFilter("全部风险等级"); setDateRange("近 30 日"); setSelectedReport(reports[0]); }}>重置</Button></div><p className="mb-4 text-sm text-slate-400">共 {filteredReports.length} 条报告 · {dateRange}</p><div className="space-y-3">{filteredReports.map(r=><button key={r[0]} onClick={()=>setSelectedReport(r)} className={cx("w-full rounded-xl border p-4 text-left transition", selectedReport[0]===r[0]?"border-blue-400 bg-blue-500/15":"border-cyan-300/15 bg-slate-950/25 hover:bg-cyan-400/5")}><div className="flex justify-between"><span className="text-sm text-slate-400">{r[0]}</span><RiskTag level={r[4]}/></div><h3 className="mt-2 text-lg font-bold">{r[1]}</h3><p className="mt-2 text-sm text-slate-400">{r[2]} · {r[3]} <span className="float-right text-cyan-300">查看详情 ›</span></p></button>)}</div><Pagination total="" /></Card><Card><div className="mb-3 flex justify-between"><PanelTitle title={fullscreen ? "报告全屏预览" : "报告预览"} /><div className="flex gap-2"><Button variant="ghost" icon={Printer} onClick={()=>window.print()}>打印</Button><Button variant="ghost" icon={Maximize2} onClick={()=>setFullscreen((v)=>!v)}>{fullscreen ? "退出全屏" : "全屏查看"}</Button></div></div><ReportPreview report={selectedReport} /></Card></div>
     </PageShell>
   );
 }
@@ -855,10 +930,18 @@ function ReportPreview({ report }) { return <div className="mx-auto rounded-xl b
 
 function ModelPage() { return <PageShell title="模型与技术展示" subtitle="特征建模 - 流量分类 - 行为关联"><div className="grid grid-cols-3 gap-4"><Card className="col-span-2"><PanelTitle title="系统技术架构"/><div className="grid grid-cols-3 gap-4">{[["预训练模型","通用网络流量预训练 + SIM 微调",Brain,palette.blue],["字节级图建模","Header Graph / Payload Graph / Fusion Graph",Network,palette.cyan],["多模态融合","流量元数据、时序模式、跨协议交互",Layers3,palette.purple],["GraphSAGE / GAT","跨粒度图表示学习",Activity,palette.green],["对抗性训练","高比例噪声流量增强鲁棒性",Shield,palette.amber],["报告生成","结构化研判与证据链输出",FileText,palette.red]].map(([t,s,Icon,c])=><div key={t} className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-5"><Icon style={{color:c}}/><h3 className="mt-3 text-xl font-bold">{t}</h3><p className="mt-2 text-sm text-slate-400">{s}</p></div>)}</div><div className="mt-6"><PanelTitle title="预训练 → 微调 → 推理流程"/><div className="flex items-center justify-between">{["大规模通用流量","自监督预训练","SIM 专项微调","对抗噪声增强","多层分类推理","行为与群组关联"].map((x,i)=><React.Fragment key={x}><div className="rounded-xl border border-blue-300/20 bg-blue-500/10 px-5 py-4 text-center">{x}</div>{i<5&&<ArrowRight className="text-cyan-400"/>}</React.Fragment>)}</div></div></Card><Card><PanelTitle title="性能指标"/>{[["SIM 提取准确率","98.7%",palette.cyan],["用户行为分析","90.2%",palette.blue],["群组匹配准确率","89.4%",palette.purple],["混合流量识别","94%",palette.green]].map(([t,v,c])=><div key={t} className="mb-5"><div className="mb-2 flex justify-between"><span>{t}</span><b style={{color:c}}>{v}</b></div><div className="h-3 rounded bg-slate-800"><div className="h-full rounded" style={{width:v,background:c}}/></div></div>)}</Card></div><div className="mt-4 grid grid-cols-2 gap-4"><Card><PanelTitle title="字节级流量图示意"/><RelationGraph selected="" setSelected={()=>{}} /></Card><Card><PanelTitle title="方法对比"/><DataTable columns={["方法","SIM 提取","行为分析","群组匹配","备注"]} rows={[["TrafficVigil","98.7%","90.2%","89.4%","多模态图神经网络"],["ET-BERT","78.2%","74.1%","--","预训练流量模型"],["GraphDApp","81.4%","76.5%","--","流级图建模"],["ECD-GNN","84.3%","79.8%","71.2%","粗粒度图结构"]]} /></Card></div></PageShell>; }
 
-function TasksPage({ go }) { return <PageShell title="任务历史" subtitle="管理所有流量检测任务记录" actions={<Button icon={Play} onClick={()=>go("workspace")}>创建新任务</Button>}><Card><div className="mb-4 flex gap-3"><div className="flex-1 rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-slate-500"><Search className="mr-2 inline" size={16}/>搜索任务</div><SmallSelect label="全部状态"/><SmallSelect label="风险等级"/><SmallSelect label="检测类型"/></div><DataTable columns={["Task ID","File Name","Detection Mode","Created Time","Status","Risk Level","Top Application","Top Behavior","Report","Actions"]} rows={Array.from({length:10}).map((_,i)=>[`TASK-20250519-${String(i+1).padStart(4,"0")}`,`capture_20250519_${142300+i}.pcap`,i%2?"快速检测":"完整检测",`2025-05-19 14:${20+i}:33`,i%3?"已完成":"运行中",["高危","中危","低危"][i%3],["Telegram","WhatsApp","Signal"][i%3],["chat","file","photo"][i%3],"查看报告","复现 / 删除"])} renderCell={(c,j)=> j===4 ? <span className="text-emerald-300">{c}</span> : j===5 ? <RiskTag level={c}/> : j===8 ? <button onClick={()=>go("reports")} className="text-cyan-300">{c}</button> : j===9 ? <div className="flex gap-2"><button onClick={()=>go("workspace")} className="text-cyan-300">复现</button><button onClick={()=>toast("任务已删除")} className="text-red-300">删除</button></div> : c}/><Pagination total="共 126 条"/></Card></PageShell>; }
+function TasksPage({ go }) {
+  const [statusFilter, setStatusFilter] = useState("全部状态");
+  const [taskRows, setTaskRows] = useState(() => Array.from({length:10}).map((_,i)=>[`TASK-20250519-${String(i+1).padStart(4,"0")}`,`capture_20250519_${142300+i}.pcap`,i%2?"快速检测":"完整检测",`2025-05-19 14:${20+i}:33`,i%3?"已完成":"运行中",["高危","中危","低危"][i%3],["Telegram","WhatsApp","Signal"][i%3],["chat","file","photo"][i%3],"查看报告","复现 / 删除"]));
+  const visibleRows = statusFilter === "全部状态" ? taskRows : taskRows.filter((row) => row[4] === statusFilter);
+  return <PageShell title="任务历史" subtitle="管理所有流量检测任务记录" actions={<Button icon={Play} onClick={()=>go("workspace")}>创建新任务</Button>}><Card><div className="mb-4 flex flex-wrap gap-3"><div className="flex-[1_1_220px] rounded-lg border border-cyan-300/15 bg-slate-950/35 px-4 py-2 text-slate-500"><Search className="mr-2 inline" size={16}/>搜索任务</div><SmallSelect label={statusFilter} options={["全部状态","已完成","运行中"]} onChange={setStatusFilter}/><SmallSelect label="风险等级"/><SmallSelect label="检测类型"/></div><DataTable columns={["Task ID","File Name","Detection Mode","Created Time","Status","Risk Level","Top Application","Top Behavior","Report","Actions"]} rows={visibleRows} renderCell={(c,j,row)=> j===4 ? <span className={row[4] === "运行中" ? "text-blue-300" : "text-emerald-300"}>{c}</span> : j===5 ? <RiskTag level={c}/> : j===8 ? <button onClick={()=>go("reports")} className="text-cyan-300">{c}</button> : j===9 ? <div className="flex flex-wrap gap-2"><button onClick={()=>go("workspace")} className="text-cyan-300">复现</button><button onClick={()=>setTaskRows((items)=>items.filter((item)=>item[0] !== row[0]))} className="text-red-300">删除</button></div> : c}/><Pagination total={`共 ${visibleRows.length} 条`}/></Card></PageShell>;
+}
 
 function SettingsPage({ initialTab = "模型配置" }) {
   const [tab,setTab]=useState(initialTab);
+  const [savedAt, setSavedAt] = useState("");
+  const [identityKey, setIdentityKey] = useState("TVK-8F7C3A21-9B6D1E4F");
+  const [selectedTemplate, setSelectedTemplate] = useState("执法研判模板");
   useEffect(() => setTab(initialTab), [initialTab]);
   const tabs = ["用户信息","模型配置","协议适配","报告模板","数据脱敏","系统日志"];
   return (
@@ -873,7 +956,7 @@ function SettingsPage({ initialTab = "模型配置" }) {
                 <Input label="用户名" icon={UserCircle} placeholder="admin" />
                 <Input label="所属单位" icon={Building2} placeholder="密网巡哨实验室" />
                 <Input label="邮箱" icon={Mail} placeholder="admin@trafficvigil.local" />
-                <Input label="身份密钥" icon={KeyRound} placeholder="TVK-8F7C3A21-9B6D1E4F" />
+                <Input label="身份密钥" icon={KeyRound} placeholder={identityKey} />
               </div>
               <div className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4">
                 <UserCircle size={44} className="mb-3 text-cyan-300" />
@@ -884,18 +967,18 @@ function SettingsPage({ initialTab = "模型配置" }) {
                   <div className="flex justify-between"><span>任务空间</span><b>SPACE-8F7C3A21</b></div>
                   <div className="flex justify-between"><span>双因素认证</span><b className="text-emerald-300">已启用</b></div>
                 </div>
-                <Button className="mt-4 w-full" variant="ghost" icon={KeyRound} onClick={()=>toast("身份密钥已刷新")}>刷新身份密钥</Button>
+                <Button className="mt-4 w-full" variant="ghost" icon={KeyRound} onClick={()=>setIdentityKey(`TVK-${Math.random().toString(16).slice(2,10).toUpperCase()}-${Math.random().toString(16).slice(2,10).toUpperCase()}`)}>刷新身份密钥</Button>
               </div>
             </div>
           )}
-          {tab==="模型配置"&&<div className="grid grid-cols-2 gap-4"><ConfigBox title="当前模型" value="TV-Model v2.4.1" select/><ConfigBox title="默认检测模式" value="完整检测" select/><ConfigBox title="置信度阈值" value="0.85"/><ConfigBox title="批处理大小" value="128"/></div>}
+          {tab==="模型配置"&&<div className="grid grid-cols-2 gap-4"><ConfigBox title="当前模型" value="TV-Model v2.4.1" select options={["TV-Model v2.4.1","TV-Model v2.3.8","TV-Model Lite"]}/><ConfigBox title="默认检测模式" value="完整检测" select options={["完整检测","快速检测","仅分类"]}/><ConfigBox title="置信度阈值" value="0.85"/><ConfigBox title="批处理大小" value="128"/></div>}
           {tab==="协议适配"&&<div className="space-y-3">{["TLS 1.3","QUIC","WireGuard","OpenVPN","Shadowsocks"].map(x=><SwitchRow key={x} label={x}/>)}</div>}
           {tab==="报告模板"&&(
             <div className="grid grid-cols-3 gap-4">
               {[["执法研判模板","包含风险评分、证据链与溯源路径",FileText],["管理简报模板","面向领导汇报，突出趋势与结论",Printer],["机器可读模板","JSON/CSV 字段完整输出",FileJson]].map(([title,body,Icon])=>(
-                <button type="button" key={title} onClick={()=>toast(`${title} 已设为默认模板`)} className="tv-button rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4 text-left hover:bg-cyan-400/10">
+                <button type="button" key={title} aria-pressed={selectedTemplate === title} onClick={()=>setSelectedTemplate(title)} className={cx("tv-button rounded-xl border p-4 text-left hover:bg-cyan-400/10", selectedTemplate === title ? "border-blue-400 bg-blue-500/15" : "border-cyan-300/15 bg-slate-950/35")}>
                   <Icon className="mb-3 text-cyan-300" />
-                  <h3 className="font-bold">{title}</h3>
+                  <h3 className="flex items-center justify-between font-bold">{title}{selectedTemplate === title && <CheckCircle2 size={16} className="text-emerald-300" />}</h3>
                   <p className="mt-2 text-sm text-slate-400">{body}</p>
                 </button>
               ))}
@@ -904,8 +987,9 @@ function SettingsPage({ initialTab = "模型配置" }) {
           {tab==="数据脱敏"&&<div className="space-y-3">{["IP 地址匿名化","MAC 地址匿名化","端口重映射","序列号随机化","时间戳清除"].map(x=><SwitchRow key={x} label={x}/>)}</div>}
           {tab==="系统日志"&&<DataTable columns={["Time","Level","Module","Message"]} rows={[["14:32:01","INFO","Model","加载特征模型成功"],["14:32:07","INFO","SIM","运行 SIM 分类模型"],["14:33:10","WARN","Group","发现高危群组匹配"],["14:35:22","INFO","Report","报告生成完成"]]} />}
           <div className="mt-5 flex flex-wrap gap-3">
-            <Button icon={Save} onClick={()=>toast(`${tab} 已保存`)}>保存设置</Button>
-            <Button variant="ghost" icon={RefreshCw} onClick={()=>toast(`${tab} 已恢复推荐配置`)}>恢复推荐配置</Button>
+            <Button icon={Save} onClick={()=>setSavedAt(new Date().toLocaleTimeString("zh-CN", { hour12: false }))}>保存设置</Button>
+            <Button variant="ghost" icon={RefreshCw} onClick={()=>setSavedAt("已恢复推荐配置")}>恢复推荐配置</Button>
+            {savedAt && <span className="self-center text-sm text-emerald-300">{tab}：{savedAt}</span>}
           </div>
         </Card>
       </div>

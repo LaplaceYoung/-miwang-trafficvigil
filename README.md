@@ -230,6 +230,7 @@ https://laplaceyoung.github.io/-miwang-trafficvigil/#/login
 
 本仓库已整理以下材料：
 
+- `docs/installation-guide.md`：作品安装说明、运行步骤、部署说明与完整页面效果图。
 - `docs/work-introduction.md`：作品简介，可直接纳入提交材料。
 - `docs/design-thinking.md`：系统设计思路。
 - `docs/key-difficulties.md`：重点难点与解决方案。
