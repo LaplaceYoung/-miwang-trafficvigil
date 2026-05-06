@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   color-scheme: dark;
   --bg: #061013;
@@ -416,6 +418,210 @@ select:focus {
   background: rgba(6, 16, 19, 0.82);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(18px);
+}
+
+.tv-app {
+  min-height: 100vh;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  font-size: 13.5px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.tv-app h1,
+.tv-app h2,
+.tv-app h3,
+.tv-app h4,
+.tv-app p {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.tv-app h1 {
+  font-size: 24px;
+  line-height: 1.16;
+}
+
+.tv-app h2 {
+  font-size: 19px;
+  line-height: 1.22;
+}
+
+.tv-app h3 {
+  font-size: 15px;
+  line-height: 1.24;
+}
+
+.tv-app label {
+  display: block;
+  gap: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tv-check-row {
+  display: flex !important;
+}
+
+.tv-app input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+}
+
+.tv-app button,
+.tv-button,
+.tv-icon-button,
+.tv-nav-button {
+  cursor: pointer;
+  letter-spacing: 0;
+  transform-origin: center;
+  transition:
+    transform 160ms cubic-bezier(.22, 1, .36, 1),
+    border-color 160ms cubic-bezier(.22, 1, .36, 1),
+    background-color 160ms cubic-bezier(.22, 1, .36, 1),
+    color 160ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 160ms cubic-bezier(.22, 1, .36, 1),
+    filter 160ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.tv-app button:hover,
+.tv-button:hover,
+.tv-icon-button:hover,
+.tv-nav-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.tv-app button:active,
+.tv-button:active,
+.tv-icon-button:active,
+.tv-nav-button:active {
+  transform: translateY(1px) scale(.985);
+  filter: brightness(1.16);
+}
+
+.tv-app button:focus-visible,
+.tv-button:focus-visible,
+.tv-icon-button:focus-visible,
+.tv-nav-button:focus-visible,
+.tv-app input:focus-visible {
+  outline: 2px solid rgba(24, 213, 255, .75);
+  outline-offset: 2px;
+}
+
+.tv-card {
+  border-radius: 12px;
+}
+
+.tv-table-wrap {
+  max-width: 100%;
+}
+
+.tv-switch span {
+  box-shadow: 0 1px 8px rgba(0, 0, 0, .25);
+}
+
+@media (max-width: 1500px) {
+  .tv-app {
+    font-size: 12.8px;
+  }
+
+  .tv-page-shell {
+    padding: 12px;
+  }
+
+  .tv-card {
+    padding: 10px;
+  }
+
+  .tv-app .text-3xl {
+    font-size: 1.45rem;
+    line-height: 1.18;
+  }
+
+  .tv-app .text-2xl {
+    font-size: 1.18rem;
+    line-height: 1.18;
+  }
+
+  .tv-app .text-xl {
+    font-size: 1.05rem;
+    line-height: 1.22;
+  }
+
+  .tv-app .gap-4 {
+    gap: .7rem;
+  }
+
+  .tv-app .mt-4 {
+    margin-top: .7rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tv-topbar .hidden.md\:inline,
+  .tv-topbar .hidden.md\:flex {
+    display: none !important;
+  }
+
+  .tv-main-content {
+    margin-left: 82px !important;
+  }
+
+  .tv-page-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .tv-topbar {
+    position: sticky;
+  }
+
+  .tv-sidebar {
+    position: static;
+    width: 100% !important;
+    height: auto;
+  }
+
+  .tv-sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tv-login-visual {
+    display: none;
+  }
+
+  .tv-login-shell {
+    align-items: start;
+    padding-top: 42px;
+  }
+
+  .tv-main-content {
+    margin-left: 0 !important;
+  }
+
+  .tv-page-shell > div:first-child,
+  .tv-page-shell .grid,
+  .tv-app .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tv-page-shell > div:first-child {
+    display: grid;
+  }
+
+  .tv-input-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px;
+  }
+
+  .tv-input-row label {
+    text-align: left;
+  }
 }
 
 .console-topbar strong,
