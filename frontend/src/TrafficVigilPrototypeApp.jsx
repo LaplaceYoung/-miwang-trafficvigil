@@ -212,7 +212,152 @@ const reports = [
   ["RPT-20250519-0004", "SIM 卡异常使用行为分析", "2025-05-19 12:39:55", "172.16.8.101", "中危"],
   ["RPT-20250519-0005", "潜在数据泄露行为分析", "2025-05-19 11:58:40", "192.168.3.77", "高危"],
   ["RPT-20250519-0006", "公共 WiFi 风险行为研判", "2025-05-19 11:21:08", "10.1.2.55", "低危"],
+  ["RPT-20250519-0007", "Telegram 夜间外联复核报告", "2025-05-19 14:34:09", "192.168.8.41", "高危"],
+  ["RPT-20250519-0008", "WhatsApp 文件传输审计报告", "2025-05-19 14:38:22", "172.18.4.29", "中危"],
+  ["RPT-20250519-0009", "Signal 图片会话行为报告", "2025-05-19 14:41:36", "10.12.3.68", "低危"],
+  ["RPT-20250519-0010", "Telegram 代理隧道追踪报告", "2025-05-19 14:45:17", "192.168.6.103", "高危"],
 ];
+
+const reportProfiles = {
+  "RPT-20250519-0001": {
+    taskId: "TASK-20250519-0001",
+    destinationIp: "45.77.233.12",
+    protocol: "TLSv1.3 / WireGuard",
+    deviceType: "Windows 10",
+    score: 92,
+    confidence: "96.4%",
+    captureSize: "1.82 TB",
+    captureSplit: [[68.7, palette.blue], [18.3, palette.cyan], [6.2, palette.green], [3.1, palette.purple]],
+    conclusions: [["VPN", "恶意 VPN", "text-red-600"], ["SIM", "可疑 SIM", "text-red-500"], ["应用识别", "可疑应用", "text-red-500"], ["行为嗅探", "数据外传", "text-red-500"], ["群组匹配", "高风险群组", "text-red-600"], ["模型置信度", "96.4%", "text-red-500"]],
+    resultRows: [["VPN 分类", "恶意 VPN", "text-red-400"], ["SIM 分类", "可疑 SIM", "text-amber-300"], ["群组匹配", "高风险群组", "text-red-400"]],
+    evidence: "企业终端在非办公时段与境外匿名节点保持长会话，VPN 隧道、Telegram 会话与公共群组命中路径完整。",
+  },
+  "RPT-20250519-0002": {
+    taskId: "TASK-20250519-0002",
+    destinationIp: "185.220.101.34",
+    protocol: "QUIC / WireGuard",
+    deviceType: "Linux Gateway",
+    score: 74,
+    confidence: "88.6%",
+    captureSize: "684.27 GB",
+    captureSplit: [[52.4, palette.cyan], [31.1, palette.blue], [11.8, palette.purple], [4.7, palette.green]],
+    conclusions: [["VPN", "跨境隧道", "text-amber-600"], ["SIM", "低相关", "text-slate-500"], ["应用识别", "Unknown", "text-amber-600"], ["行为嗅探", "长连接代理", "text-amber-600"], ["群组匹配", "弱关联", "text-slate-500"], ["模型置信度", "88.6%", "text-amber-600"]],
+    resultRows: [["VPN 分类", "跨境隧道", "text-amber-300"], ["SIM 分类", "低相关", "text-slate-300"], ["群组匹配", "弱关联", "text-slate-300"]],
+    evidence: "网关设备与多跳匿名出口持续通信，WireGuard 指纹稳定，公共群组侧仅形成弱关联证据。",
+  },
+  "RPT-20250519-0003": {
+    taskId: "TASK-20250519-0003",
+    destinationIp: "149.154.167.91",
+    protocol: "TLSv1.3",
+    deviceType: "Android 13",
+    score: 38,
+    confidence: "81.2%",
+    captureSize: "128.44 GB",
+    captureSplit: [[34.2, palette.blue], [22.5, palette.cyan], [7.8, palette.green], [35.5, "#94a3b8"]],
+    conclusions: [["VPN", "普通加密流", "text-emerald-600"], ["SIM", "未触发", "text-slate-500"], ["应用识别", "Telegram", "text-blue-600"], ["行为嗅探", "聊天通信", "text-blue-600"], ["群组匹配", "低风险群组", "text-emerald-600"], ["模型置信度", "81.2%", "text-blue-600"]],
+    resultRows: [["VPN 分类", "普通加密流", "text-emerald-300"], ["SIM 分类", "未触发", "text-slate-300"], ["群组匹配", "低风险群组", "text-emerald-300"]],
+    evidence: "应用识别结果集中在 Telegram 正常聊天流量，通信节奏稳定，风险画像处于低等级。",
+  },
+  "RPT-20250519-0004": {
+    taskId: "TASK-20250519-0004",
+    destinationIp: "31.13.70.49",
+    protocol: "TLSv1.3 / HTTPS",
+    deviceType: "iOS 17",
+    score: 67,
+    confidence: "90.8%",
+    captureSize: "307.89 GB",
+    captureSplit: [[29.4, palette.blue], [43.4, palette.purple], [14.9, palette.green], [12.3, "#94a3b8"]],
+    conclusions: [["VPN", "轻度代理", "text-amber-600"], ["SIM", "异常使用", "text-amber-600"], ["应用识别", "WhatsApp", "text-blue-600"], ["行为嗅探", "高频聊天", "text-amber-600"], ["群组匹配", "中风险群组", "text-amber-600"], ["模型置信度", "90.8%", "text-amber-600"]],
+    resultRows: [["VPN 分类", "轻度代理", "text-amber-300"], ["SIM 分类", "异常使用", "text-amber-300"], ["群组匹配", "中风险群组", "text-amber-300"]],
+    evidence: "SIM 行为特征在夜间形成异常峰值，WhatsApp 会话与中风险群组存在时间窗口重叠。",
+  },
+  "RPT-20250519-0005": {
+    taskId: "TASK-20250519-0005",
+    destinationIp: "5.188.10.88",
+    protocol: "TLSv1.3 / SFTP",
+    deviceType: "Windows 11",
+    score: 88,
+    confidence: "94.9%",
+    captureSize: "926.14 GB",
+    captureSplit: [[18.1, palette.blue], [13.7, palette.cyan], [61.5, palette.red], [6.7, palette.purple]],
+    conclusions: [["VPN", "隐匿通道", "text-red-600"], ["SIM", "低相关", "text-slate-500"], ["应用识别", "Signal", "text-red-500"], ["行为嗅探", "数据外传", "text-red-600"], ["群组匹配", "高风险群组", "text-red-600"], ["模型置信度", "94.9%", "text-red-500"]],
+    resultRows: [["VPN 分类", "隐匿通道", "text-red-400"], ["SIM 分类", "低相关", "text-slate-300"], ["群组匹配", "高风险群组", "text-red-400"]],
+    evidence: "终端出现持续上行大包序列，包长分布与历史外传样本高度一致，Signal 会话与高风险群组线索闭合。",
+  },
+  "RPT-20250519-0006": {
+    taskId: "TASK-20250519-0006",
+    destinationIp: "203.0.113.24",
+    protocol: "HTTPS / DNS",
+    deviceType: "Public WiFi AP",
+    score: 32,
+    confidence: "78.5%",
+    captureSize: "74.62 GB",
+    captureSplit: [[46.9, palette.blue], [12.8, palette.cyan], [4.1, palette.purple], [36.2, "#94a3b8"]],
+    conclusions: [["VPN", "零散代理", "text-blue-600"], ["SIM", "未触发", "text-slate-500"], ["应用识别", "混合应用", "text-blue-600"], ["行为嗅探", "公共接入", "text-blue-600"], ["群组匹配", "低风险", "text-emerald-600"], ["模型置信度", "78.5%", "text-blue-600"]],
+    resultRows: [["VPN 分类", "零散代理", "text-blue-300"], ["SIM 分类", "未触发", "text-slate-300"], ["群组匹配", "低风险", "text-emerald-300"]],
+    evidence: "公共 WiFi 场景存在零散代理连接，流量主体为常规网页访问，未形成高危证据链。",
+  },
+  "RPT-20250519-0007": {
+    taskId: "TASK-20250519-0007",
+    destinationIp: "91.108.56.152",
+    protocol: "QUIC / TLSv1.3",
+    deviceType: "Android 14",
+    score: 86,
+    confidence: "93.1%",
+    captureSize: "538.90 GB",
+    captureSplit: [[58.9, palette.blue], [26.7, palette.cyan], [9.4, palette.purple], [5.0, "#94a3b8"]],
+    conclusions: [["VPN", "高频代理", "text-red-600"], ["SIM", "可疑 SIM", "text-red-500"], ["应用识别", "Telegram", "text-red-500"], ["行为嗅探", "夜间外联", "text-red-500"], ["群组匹配", "高风险群组", "text-red-600"], ["模型置信度", "93.1%", "text-red-500"]],
+    resultRows: [["VPN 分类", "高频代理", "text-red-400"], ["SIM 分类", "可疑 SIM", "text-amber-300"], ["群组匹配", "高风险群组", "text-red-400"]],
+    evidence: "移动终端在夜间窗口形成稳定代理会话，Telegram 流量与高风险公共群组访问时间高度重叠。",
+  },
+  "RPT-20250519-0008": {
+    taskId: "TASK-20250519-0008",
+    destinationIp: "157.240.20.60",
+    protocol: "TLSv1.3 / HTTPS",
+    deviceType: "iPhone 15",
+    score: 63,
+    confidence: "87.9%",
+    captureSize: "244.18 GB",
+    captureSplit: [[25.6, palette.blue], [47.3, palette.green], [15.8, palette.amber], [11.3, "#94a3b8"]],
+    conclusions: [["VPN", "轻度代理", "text-amber-600"], ["SIM", "低相关", "text-slate-500"], ["应用识别", "WhatsApp", "text-blue-600"], ["行为嗅探", "文件传输", "text-amber-600"], ["群组匹配", "中风险群组", "text-amber-600"], ["模型置信度", "87.9%", "text-amber-600"]],
+    resultRows: [["VPN 分类", "轻度代理", "text-amber-300"], ["SIM 分类", "低相关", "text-slate-300"], ["群组匹配", "中风险群组", "text-amber-300"]],
+    evidence: "WhatsApp 会话中出现连续上行文件片段，单次传输规模偏高，与中风险群组活跃时间窗口吻合。",
+  },
+  "RPT-20250519-0009": {
+    taskId: "TASK-20250519-0009",
+    destinationIp: "149.154.175.50",
+    protocol: "TLSv1.3",
+    deviceType: "Android 12",
+    score: 29,
+    confidence: "79.6%",
+    captureSize: "96.73 GB",
+    captureSplit: [[22.8, palette.blue], [18.5, palette.cyan], [10.2, palette.green], [48.5, "#94a3b8"]],
+    conclusions: [["VPN", "普通加密流", "text-emerald-600"], ["SIM", "未触发", "text-slate-500"], ["应用识别", "Signal", "text-blue-600"], ["行为嗅探", "图片会话", "text-blue-600"], ["群组匹配", "低风险", "text-emerald-600"], ["模型置信度", "79.6%", "text-blue-600"]],
+    resultRows: [["VPN 分类", "普通加密流", "text-emerald-300"], ["SIM 分类", "未触发", "text-slate-300"], ["群组匹配", "低风险", "text-emerald-300"]],
+    evidence: "Signal 流量主要呈现图片消息会话特征，包长波动与正常媒体传输一致，群组关联风险较低。",
+  },
+  "RPT-20250519-0010": {
+    taskId: "TASK-20250519-0010",
+    destinationIp: "146.70.119.22",
+    protocol: "WireGuard / UDP",
+    deviceType: "Windows 11",
+    score: 91,
+    confidence: "95.8%",
+    captureSize: "1.14 TB",
+    captureSplit: [[64.2, palette.red], [19.7, palette.blue], [10.9, palette.purple], [5.2, palette.cyan]],
+    conclusions: [["VPN", "代理隧道", "text-red-600"], ["SIM", "可疑 SIM", "text-red-500"], ["应用识别", "Telegram", "text-red-500"], ["行为嗅探", "长连接中继", "text-red-600"], ["群组匹配", "高风险群组", "text-red-600"], ["模型置信度", "95.8%", "text-red-500"]],
+    resultRows: [["VPN 分类", "代理隧道", "text-red-400"], ["SIM 分类", "可疑 SIM", "text-amber-300"], ["群组匹配", "高风险群组", "text-red-400"]],
+    evidence: "终端与 WireGuard 出口保持长连接，中继节点与 Telegram 群组访问链路连续，综合风险评分达到高危区间。",
+  },
+};
+
+function getReportProfile(report) {
+  return reportProfiles[report[0]] || reportProfiles["RPT-20250519-0001"];
+}
+
+function reportForTask(taskId, fallbackIndex = 0) {
+  return reports.find((report) => getReportProfile(report).taskId === taskId) || reports[fallbackIndex % reports.length];
+}
 
 const appMeta = {
   Telegram: { slug: "telegram", color: "#26a5e4", label: "Telegram" },
@@ -291,26 +436,28 @@ function downloadPcap(name, label, packetCount) {
 }
 
 function buildReportPayload(report) {
+  const profile = getReportProfile(report);
   return {
     reportId: report[0],
     title: report[1],
     generatedAt: report[2],
     sourceIp: report[3],
     riskLevel: report[4],
+    taskId: profile.taskId,
     modelVersion: "TV-Model v2.4.1",
+    destinationIp: profile.destinationIp,
+    protocol: profile.protocol,
+    deviceType: profile.deviceType,
+    riskScore: profile.score,
     conclusions: {
-      vpn: "恶意 VPN",
-      sim: "可疑 SIM",
-      behavior: "数据外传",
-      group: "高风险群组",
-      confidence: "96.4%"
+      vpn: profile.conclusions[0][1],
+      sim: profile.conclusions[1][1],
+      application: profile.conclusions[2][1],
+      behavior: profile.conclusions[3][1],
+      group: profile.conclusions[4][1],
+      confidence: profile.confidence
     },
-    evidence: [
-      "TLS 1.3 加密连接命中",
-      "VPN 隧道行为特征稳定",
-      "SIM 应用识别置信度高",
-      "公共群组匹配路径完整"
-    ]
+    evidence: [profile.evidence]
   };
 }
 
@@ -393,7 +540,7 @@ function App() {
     if (route === "group") return <GroupPage go={go} />;
     if (route === "reports") return <ReportsPage {...props} />;
     if (route === "model") return <ModelPage />;
-    if (route === "tasks") return <TasksPage go={go} />;
+    if (route === "tasks") return <TasksPage go={go} setSelectedReport={setSelectedReport} />;
     if (route === "settings") return <SettingsPage initialTab={settingsTab} userName={currentUser} setCurrentUser={setCurrentUser} />;
     return <DashboardPage go={go} />;
   }, [route, authed, selectedReport, settingsTab, currentUser]);
@@ -617,13 +764,15 @@ function Donut({ data, center, size = 160, labels = [], onSegmentClick }) {
 function BarChart({ items, max = 50, height = 92, onBarClick, showAppIcons = false }) {
   const [tip, setTip] = useState(null);
   return (
-    <div className="relative grid h-full grid-cols-[repeat(auto-fit,minmax(64px,1fr))] items-end gap-2 px-1 pt-1" style={{ minHeight: height + (showAppIcons ? 74 : 46) }} onMouseLeave={() => setTip(null)}>
+    <div className="tv-bar-chart relative grid grid-cols-[repeat(auto-fit,minmax(70px,1fr))] items-end gap-2 px-1 pb-2 pt-1" style={{ minHeight: height + (showAppIcons ? 96 : 56) }} onMouseLeave={() => setTip(null)}>
       {items.map((it, index) => (
-        <button key={it.label} type="button" onMouseEnter={(event) => setTip({ title: it.label, body: `${it.value}%`, x: event.currentTarget.offsetLeft + 4, y: 6 })} onClick={() => onBarClick ? onBarClick(it) : toast(`${it.label} ${it.value}%`)} className="tv-chart-bar flex min-w-0 flex-col items-center gap-2 rounded-lg border border-transparent p-1.5 hover:border-cyan-300/20 hover:bg-cyan-400/5">
+        <button key={it.label} type="button" onMouseEnter={(event) => setTip({ title: it.label, body: `${it.value}%`, x: event.currentTarget.offsetLeft + 4, y: 6 })} onClick={() => onBarClick ? onBarClick(it) : toast(`${it.label} ${it.value}%`)} className="tv-chart-bar flex min-w-0 flex-col items-center justify-end gap-1 rounded-lg border border-transparent p-1.5 hover:border-cyan-300/20 hover:bg-cyan-400/5">
           {showAppIcons && <AppIcon app={it.label} size={22} />}
           <div className="text-xs font-semibold text-slate-100">{it.value}%</div>
-          <div className="tv-bar-fill w-full max-w-8 rounded-t-lg shadow-lg" style={{ height: `${Math.max(14, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)`, "--tv-chart-delay": `${index * 70}ms` }} />
-          <div className="w-full break-words text-center text-[11px] leading-tight text-slate-300">{it.label}</div>
+          <div className="tv-bar-track flex w-full items-end justify-center" style={{ height }}>
+            <div className="tv-bar-fill w-full max-w-9 rounded-t-lg shadow-lg" style={{ height: `${Math.max(14, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)`, "--tv-chart-delay": `${index * 70}ms` }} />
+          </div>
+          <div className="tv-bar-label w-full text-center text-[11px] leading-tight text-slate-300">{it.label}</div>
         </button>
       ))}
       <ChartTooltip tip={tip} />
@@ -633,20 +782,63 @@ function BarChart({ items, max = 50, height = 92, onBarClick, showAppIcons = fal
 
 function AreaLine({ color = palette.blue, height = 170, onPointClick }) {
   const [tip, setTip] = useState(null);
-  const points = [[0,150],[40,120],[80,135],[120,90],[160,115],[200,130],[240,100],[280,125],[320,85],[360,70],[400,118],[440,105],[480,80],[520,120],[560,110],[600,140],[640,115],[680,125],[720,100],[760,130],[800,122]];
-  const pts = points.map((p) => p.join(",")).join(" ");
+  const uid = useId().replace(/:/g, "");
+  const width = 800;
+  const chartHeight = 238;
+  const pad = { left: 48, right: 22, top: 20, bottom: 38 };
+  const labels = ["12:40", "12:50", "13:00", "13:10", "13:20", "13:30", "13:40", "13:50", "14:00", "14:10", "14:20", "14:30"];
+  const series = [
+    { name: "总吞吐", unit: "Mbps", color, values: [420, 458, 512, 486, 548, 594, 571, 628, 684, 651, 703, 676] },
+    { name: "加密流量", unit: "Mbps", color: palette.cyan, values: [238, 266, 301, 294, 337, 364, 351, 398, 421, 405, 442, 431] },
+  ];
+  const values = series.flatMap((item) => item.values);
+  const min = Math.floor(Math.min(...values) * 0.78);
+  const max = Math.ceil(Math.max(...values) * 1.08);
+  const xFor = (index) => pad.left + (index / (labels.length - 1)) * (width - pad.left - pad.right);
+  const yFor = (value) => pad.top + (1 - (value - min) / (max - min)) * (chartHeight - pad.top - pad.bottom);
+  const pointsFor = (item) => item.values.map((value, index) => [xFor(index), yFor(value), value]);
+  const pathFor = (item) => pointsFor(item).map(([x, y]) => `${x},${y}`).join(" ");
+  const areaFor = (item) => {
+    const pts = pointsFor(item).map(([x, y]) => `${x},${y}`).join(" ");
+    return `${pad.left},${chartHeight - pad.bottom} ${pts} ${width - pad.right},${chartHeight - pad.bottom}`;
+  };
+  const latest = series.map((item) => item.values[item.values.length - 1]);
   return (
     <div className="relative" onMouseLeave={() => setTip(null)}>
-      <svg viewBox="0 0 800 220" className="tv-area-chart h-full w-full" style={{ minHeight: height }}>
-        <defs><linearGradient id={`g-${color}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".35" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
-        {[40,80,120,160,200].map((y) => <line key={y} x1="0" x2="800" y1={y} y2={y} stroke="rgba(148,163,184,.12)" />)}
-        {[100,200,300,400,500,600,700].map((x) => <line key={x} y1="20" y2="205" x1={x} x2={x} stroke="rgba(148,163,184,.08)" />)}
-        <polygon className="tv-area-fill" points={`0,220 ${pts} 800,220`} fill={`url(#g-${color})`} />
-        <polyline className="tv-area-path" points={pts} fill="none" stroke={color} strokeWidth="3" />
-        {points.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="12" fill="transparent" className="cursor-pointer" onMouseEnter={() => setTip({ title: `采样点 ${i + 1}`, body: `${Math.round(220 - y)} Mbps`, x: Math.min(640, x + 12), y: Math.max(6, y - 44) })} onClick={() => onPointClick ? onPointClick(i) : toast(`采样点 ${i + 1} 已选中`)} />
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+        <div className="flex flex-wrap gap-3">
+          {series.map((item) => <span key={item.name} className="flex items-center gap-1"><i className="h-2 w-5 rounded-full" style={{ background: item.color }} />{item.name}</span>)}
+        </div>
+        <span>最新 {latest[0]} / {latest[1]} Mbps</span>
+      </div>
+      <svg viewBox={`0 0 ${width} ${chartHeight}`} className="tv-area-chart h-full w-full" style={{ minHeight: height }}>
+        <defs>
+          {series.map((item, index) => (
+            <linearGradient key={item.name} id={`g-${uid}-${index}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor={item.color} stopOpacity={index === 0 ? ".30" : ".18"} />
+              <stop offset="1" stopColor={item.color} stopOpacity="0" />
+            </linearGradient>
+          ))}
+        </defs>
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+          const y = pad.top + ratio * (chartHeight - pad.top - pad.bottom);
+          const value = Math.round(max - ratio * (max - min));
+          return <g key={ratio}><line x1={pad.left} x2={width - pad.right} y1={y} y2={y} stroke="rgba(148,163,184,.12)" /><text x="8" y={y + 4} fill="#94a3b8" fontSize="11">{value}</text></g>;
+        })}
+        {labels.map((label, index) => (
+          <g key={label}>
+            <line x1={xFor(index)} x2={xFor(index)} y1={pad.top} y2={chartHeight - pad.bottom} stroke="rgba(148,163,184,.06)" />
+            <text x={xFor(index)} y={chartHeight - 12} fill="#94a3b8" fontSize="11" textAnchor="middle">{index % 2 === 0 ? label : ""}</text>
+          </g>
         ))}
-        <circle className="tv-area-marker" cx="520" cy="120" r="5" fill={color} />
+        {series.map((item, seriesIndex) => (
+          <g key={item.name}>
+            <polygon className="tv-area-fill" points={areaFor(item)} fill={`url(#g-${uid}-${seriesIndex})`} style={{ "--tv-chart-delay": `${seriesIndex * 90}ms` }} />
+            <polyline className="tv-area-path" points={pathFor(item)} fill="none" stroke={item.color} strokeWidth={seriesIndex === 0 ? 3 : 2.4} style={{ "--tv-chart-delay": `${seriesIndex * 90}ms` }} />
+            {pointsFor(item).map(([x, y, value], index) => <circle key={`${item.name}-${index}`} cx={x} cy={y} r="11" fill="transparent" className="cursor-pointer" onMouseEnter={() => setTip({ title: `${item.name} · ${labels[index]}`, body: `${value} ${item.unit}`, x: Math.min(650, x + 12), y: Math.max(6, y - 44) })} onClick={() => onPointClick ? onPointClick(index) : toast(`${labels[index]} ${item.name}：${value} ${item.unit}`)} />)}
+            {pointsFor(item).map(([x, y], index) => <circle key={`${item.name}-dot-${index}`} cx={x} cy={y} r={index === item.values.length - 1 ? 4.5 : 2.7} fill={item.color} opacity=".96" />)}
+          </g>
+        ))}
       </svg>
       <ChartTooltip tip={tip} />
     </div>
@@ -1222,13 +1414,64 @@ function BehaviorPage({ go }) {
           <div className="mt-4 grid grid-cols-6 gap-3">{[["最可能行为","chat","52.6%"],["行为置信度","0.783","高置信度"],["样本数量","12,846","条流记录"],["平均包长","486.7 B","标准差 312.8 B"],["平均间隔","152.3 ms","标准差 210.6 ms"],["持续时间","00:26:48","hh:mm:ss"]].map(([t,v,s]) => <Card key={t} className="text-center"><p className="text-slate-400">{t}</p><h3 className="mt-2 text-2xl font-bold">{v}</h3><p className="mt-1 text-sm text-slate-400">{s}</p></Card>)}</div>
           <Card className="mt-4"><PanelTitle title="实例结果" /><div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 pb-2">{cards.map(([Icon,t,v,tag,c],i)=><button key={t} onClick={()=>setDetail(true)} className={cx("rounded-xl border bg-slate-950/35 p-4 text-left", i===0 ? "border-blue-400 shadow-[0_0_20px_rgba(20,136,255,.22)]" : "border-cyan-300/15") }><div className="mb-2 flex justify-between"><Icon style={{color:c}} /><span className="rounded bg-slate-800 px-2 text-xs">{tag || "..."}</span></div><div className="text-2xl font-bold">{t}</div><div className="text-2xl">{v}</div><div className="mt-4 border-t border-cyan-300/10 pt-3 text-sm text-slate-400"><p>置信度　{[.783,.612,.481,.362,.271][i]}</p><p>样本数　12,846</p></div><span className="tv-button mt-3 inline-flex w-full items-center justify-center rounded-lg border border-cyan-300/15 bg-slate-900/40 px-3 py-1.5 text-sm font-semibold text-cyan-200">查看详情</span></button>)}</div></Card>
         </div>
-        {detail && <Card className="rounded-none border-y-0 border-r-0"><div className="mb-5 flex justify-between"><h3 className="text-xl font-bold">实例详情</h3><button onClick={()=>setDetail(false)}><X /></button></div><div className="space-y-3 text-sm">{[["主要预测","chat (52.6%)"],["文件","capture_20250519_142815.pcap"],["时间范围","2025-05-19 14:02:15 ~ 14:28:63"],["持续时间","00:26:48"],["样本数量","12,846"]].map(r => <div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div><SideChart title="包长序列" color={palette.blue}/><SideChart title="时间间隔序列" color={palette.purple}/><PanelTitle title="流量方向分布" /><Donut size={145} center={<><div>总流量</div><b>1.82 TB</b></>} data={[{value:53.1,color:palette.blue},{value:44.7,color:palette.cyan},{value:2.2,color:palette.purple}]} /><div className="mt-4 space-y-3 text-sm">{[["流量图节点数（均值）","213.6"],["流量图边数（均值）","1,248.7"],["流量图密度（均值）","0.027"],["连接持续时间（均值）","18.6 s"],["突发数（均值）","24.3"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div>{fullDetail && <div className="mt-4 rounded-lg border border-cyan-300/15 bg-slate-950/35 p-3 text-sm text-slate-300"><p>判定依据：短间隔小包密集、上行消息段占比 61.8%、会话保持时间稳定。</p><p className="mt-2">建议动作：进入群组匹配页联查设备、公共群组与历史会话。</p></div>}<Button className="mt-6 w-full" onClick={()=>setFullDetail((v)=>!v)}>{fullDetail ? "收起完整详情" : "查看完整详情"}</Button></Card>}
+        {detail && <Card className="rounded-none border-y-0 border-r-0"><div className="mb-5 flex justify-between"><h3 className="text-xl font-bold">实例详情</h3><button onClick={()=>setDetail(false)}><X /></button></div><div className="space-y-3 text-sm">{[["主要预测","chat (52.6%)"],["文件","capture_20250519_142815.pcap"],["时间范围","2025-05-19 14:02:15 ~ 14:28:59"],["持续时间","00:26:48"],["样本数量","12,846"]].map(r => <div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div><SideChart title="包长序列" color={palette.blue}/><SideChart title="时间间隔序列" color={palette.purple}/><PanelTitle title="流量方向分布" /><Donut size={145} center={<><div>总流量</div><b>1.82 TB</b></>} data={[{value:53.1,color:palette.blue},{value:44.7,color:palette.cyan},{value:2.2,color:palette.purple}]} /><div className="mt-4 space-y-3 text-sm">{[["流量图节点数（均值）","213.6"],["流量图边数（均值）","1,248.7"],["流量图密度（均值）","0.027"],["连接持续时间（均值）","18.6 s"],["突发数（均值）","24.3"]].map(r=><div className="flex justify-between" key={r[0]}><span className="text-slate-400">{r[0]}</span><b>{r[1]}</b></div>)}</div>{fullDetail && <div className="mt-4 rounded-lg border border-cyan-300/15 bg-slate-950/35 p-3 text-sm text-slate-300"><p>判定依据：短间隔小包密集、上行消息段占比 61.8%、会话保持时间稳定。</p><p className="mt-2">建议动作：进入群组匹配页联查设备、公共群组与历史会话。</p></div>}<Button className="mt-6 w-full" onClick={()=>setFullDetail((v)=>!v)}>{fullDetail ? "收起完整详情" : "查看完整详情"}</Button></Card>}
       </div>
     </PageShell>
   );
 }
 function RadarChart() { const labels=["chat","photo","file","voice","video","idle","unknown"]; const pts="150,35 190,90 215,145 165,190 120,175 75,145 95,85"; return <svg viewBox="0 0 300 250" className="tv-radar-chart h-[280px] w-full"><g transform="translate(0,10)">{[35,65,95,125].map((r,i)=><polygon key={r} points={labels.map((_,idx)=>`${150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*r},${120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*r}`).join(" ")} fill="none" stroke="rgba(148,163,184,.22)" />)}{labels.map((l,idx)=><g key={l}><line x1="150" y1="120" x2={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*125} y2={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*125} stroke="rgba(148,163,184,.15)"/><text x={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*142} y={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*142} fill="#cbd5e1" fontSize="13" textAnchor="middle">{l}</text></g>)}<polygon className="tv-radar-area" points={pts} fill="rgba(20,136,255,.35)" stroke="#1488ff" strokeWidth="2" /></g></svg>; }
-function SideChart({ title, color }) { return <div className="mt-5 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><PanelTitle title={title}/><TinyLine color={color}/><TinyLine color={color}/><TinyLine color={color}/></div>; }
+function SideChart({ title, color }) {
+  const [tip, setTip] = useState(null);
+  const packetMode = title.includes("包长");
+  const labels = ["14:02", "14:05", "14:08", "14:11", "14:14", "14:17", "14:20", "14:23", "14:26"];
+  const series = packetMode
+    ? [
+      { name: "上行均值", values: [342, 418, 396, 512, 476, 621, 538, 566, 489], color },
+      { name: "下行均值", values: [286, 334, 308, 398, 364, 452, 427, 439, 377], color: palette.cyan },
+    ]
+    : [
+      { name: "会话间隔", values: [118, 96, 172, 141, 226, 188, 246, 205, 163], color },
+      { name: "突发间隔", values: [42, 55, 38, 71, 64, 92, 76, 83, 61], color: palette.blue },
+    ];
+  const allValues = series.flatMap((item) => item.values);
+  const min = Math.min(...allValues) * 0.82;
+  const max = Math.max(...allValues) * 1.12;
+  const unit = packetMode ? "B" : "ms";
+  const viewWidth = 320;
+  const viewHeight = 178;
+  const pad = { left: 42, right: 16, top: 18, bottom: 34 };
+  const xFor = (index) => pad.left + (index / (labels.length - 1)) * (viewWidth - pad.left - pad.right);
+  const yFor = (value) => pad.top + (1 - (value - min) / (max - min)) * (viewHeight - pad.top - pad.bottom);
+  const pathFor = (values) => values.map((value, index) => `${xFor(index)},${yFor(value)}`).join(" ");
+  const average = Math.round(allValues.reduce((sum, value) => sum + value, 0) / allValues.length);
+  const p95 = Math.round([...allValues].sort((a, b) => a - b)[Math.floor(allValues.length * 0.95) - 1]);
+  return (
+    <div className="tv-series-card mt-5 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4" onMouseLeave={() => setTip(null)}>
+      <PanelTitle title={title} right={<span className="text-xs text-slate-400">均值 {average}{unit} · P95 {p95}{unit}</span>} />
+      <div className="mb-2 flex flex-wrap gap-3 text-xs text-slate-400">
+        {series.map((item) => <span key={item.name} className="flex items-center gap-1"><i className="h-2 w-4 rounded-full" style={{ background: item.color }} />{item.name}</span>)}
+      </div>
+      <div className="relative">
+        <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} className="tv-series-chart h-[190px] w-full">
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+            const y = pad.top + ratio * (viewHeight - pad.top - pad.bottom);
+            const value = Math.round(max - ratio * (max - min));
+            return <g key={ratio}><line x1={pad.left} x2={viewWidth - pad.right} y1={y} y2={y} stroke="rgba(148,163,184,.14)" /><text x="4" y={y + 4} fill="#94a3b8" fontSize="10">{value}</text></g>;
+          })}
+          {labels.map((label, index) => <text key={label} x={xFor(index)} y={viewHeight - 9} fill="#94a3b8" fontSize="10" textAnchor="middle">{index % 2 === 0 ? label : ""}</text>)}
+          {series.map((item, seriesIndex) => (
+            <g key={item.name}>
+              <polyline className="tv-series-path" points={pathFor(item.values)} fill="none" stroke={item.color} strokeWidth={seriesIndex === 0 ? 2.8 : 2} style={{ "--tv-chart-delay": `${seriesIndex * 90}ms` }} />
+              {item.values.map((value, index) => <circle key={`${item.name}-${index}`} cx={xFor(index)} cy={yFor(value)} r="12" fill="transparent" className="cursor-pointer" onMouseEnter={() => setTip({ title: `${item.name} · ${labels[index]}`, body: `${value}${unit}`, x: Math.min(230, xFor(index) + 8), y: Math.max(6, yFor(value) - 34) })} onClick={() => toast(`${title} ${labels[index]}：${value}${unit}`)} />)}
+              {item.values.map((value, index) => <circle key={`${item.name}-dot-${index}`} cx={xFor(index)} cy={yFor(value)} r={seriesIndex === 0 ? 3.2 : 2.5} fill={item.color} opacity=".92" />)}
+            </g>
+          ))}
+        </svg>
+        <ChartTooltip tip={tip} />
+      </div>
+    </div>
+  );
+}
 
 function GroupPage({ go }) {
   const [selected, setSelected] = useState("Group_Bravo");
@@ -1280,22 +1523,72 @@ function ReportsPage({ selectedReport, setSelectedReport }) {
   const filteredReports = reports.filter((report, index) => (riskFilter === "全部风险等级" || report[4] === riskFilter) && (reportType === "全部任务类型" || reportTypeFor(report) === reportType) && reportInRange(report, index));
   return (
     <PageShell title="分析报告中心" subtitle="集中管理与查看所有分析任务生成的报告" actions={<><Button variant="ghost" icon={FileDown} onClick={()=>exportReport("PDF")}>导出 PDF</Button><Button variant="ghost" icon={FileSpreadsheet} onClick={()=>exportReport("CSV")}>导出 CSV</Button><Button variant="ghost" icon={FileJson} onClick={()=>exportReport("JSON")}>导出 JSON</Button></>}>
-      <div className={cx("grid gap-4", fullscreen ? "grid-cols-1" : "grid-cols-[360px_1fr]")}><Card className={cx(fullscreen && "hidden")}><div className="mb-4 grid grid-cols-2 gap-3"><SmallSelect label={riskFilter} options={["全部风险等级","严重","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label={reportType} options={["全部任务类型","完整检测","快速检测","报告生成"]} onChange={setReportType}/><SmallSelect label={dateRange} options={["今日","近 7 日","近 30 日"]} onChange={setDateRange}/><Button variant="ghost" icon={RefreshCw} onClick={()=>{ setRiskFilter("全部风险等级"); setReportType("全部任务类型"); setDateRange("近 30 日"); setSelectedReport(reports[0]); }}>重置</Button></div><p className="mb-4 text-sm text-slate-400">共 {filteredReports.length} 条报告 · {dateRange}</p><div className="space-y-3">{filteredReports.map(r=><button key={r[0]} onClick={()=>setSelectedReport(r)} className={cx("w-full rounded-xl border p-4 text-left transition", selectedReport[0]===r[0]?"border-blue-400 bg-blue-500/15":"border-cyan-300/15 bg-slate-950/25 hover:bg-cyan-400/5")}><div className="flex justify-between"><span className="text-sm text-slate-400">{r[0]}</span><RiskTag level={r[4]}/></div><h3 className="mt-2 text-lg font-bold">{r[1]}</h3><p className="mt-2 text-sm text-slate-400">{r[2]} · {r[3]} <span className="float-right text-cyan-300">查看详情 ›</span></p></button>)}</div>{!filteredReports.length && <EmptyTableState message="当前条件下暂无报告" />}<Pagination total="" /></Card><Card><div className="mb-3 flex justify-between"><PanelTitle title={fullscreen ? "报告全屏预览" : "报告预览"} /><div className="flex gap-2"><Button variant="ghost" icon={Printer} onClick={()=>window.print()}>打印</Button><Button variant="ghost" icon={Maximize2} onClick={()=>setFullscreen((v)=>!v)}>{fullscreen ? "退出全屏" : "全屏查看"}</Button></div></div><ReportPreview report={selectedReport} /></Card></div>
+      <div className={cx("grid gap-4", fullscreen ? "grid-cols-1" : "grid-cols-[360px_1fr]")}><Card className={cx(fullscreen && "hidden")}><div className="mb-4 grid grid-cols-2 gap-3"><SmallSelect label={riskFilter} options={["全部风险等级","严重","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label={reportType} options={["全部任务类型","完整检测","快速检测","报告生成"]} onChange={setReportType}/><SmallSelect label={dateRange} options={["今日","近 7 日","近 30 日"]} onChange={setDateRange}/><Button variant="ghost" icon={RefreshCw} onClick={()=>{ setRiskFilter("全部风险等级"); setReportType("全部任务类型"); setDateRange("近 30 日"); setSelectedReport(reports[0]); }}>重置</Button></div><p className="mb-4 text-sm text-slate-400">共 {filteredReports.length} 条报告 · {dateRange}</p><div className="space-y-3">{filteredReports.map(r=>{ const profile = getReportProfile(r); return <button key={r[0]} onClick={()=>setSelectedReport(r)} className={cx("w-full rounded-xl border p-4 text-left transition", selectedReport[0]===r[0]?"border-blue-400 bg-blue-500/15":"border-cyan-300/15 bg-slate-950/25 hover:bg-cyan-400/5")}><div className="flex justify-between"><span className="text-sm text-slate-400">{r[0]}</span><RiskTag level={r[4]}/></div><h3 className="mt-2 text-lg font-bold">{r[1]}</h3><p className="mt-2 text-sm text-slate-400">{r[2]} · {r[3]}</p><div className="mt-3 flex items-center justify-between text-xs"><span className="rounded-md border border-cyan-300/15 px-2 py-1 text-cyan-200">评分 {profile.score}</span><span className="text-cyan-300">查看详情 ›</span></div></button>; })}</div>{!filteredReports.length && <EmptyTableState message="当前条件下暂无报告" />}<Pagination total="" /></Card><Card><div className="mb-3 flex justify-between"><PanelTitle title={fullscreen ? "报告全屏预览" : "报告预览"} /><div className="flex gap-2"><Button variant="ghost" icon={Printer} onClick={()=>window.print()}>打印</Button><Button variant="ghost" icon={Maximize2} onClick={()=>setFullscreen((v)=>!v)}>{fullscreen ? "退出全屏" : "全屏查看"}</Button></div></div><ReportPreview2 report={selectedReport} /></Card></div>
     </PageShell>
+  );
+}
+
+function ReportPreview2({ report }) {
+  const profile = getReportProfile(report);
+  const riskColor = report[4] === "低危" ? "text-emerald-500" : report[4] === "中危" ? "text-amber-500" : "text-red-500";
+  return (
+    <div className="report-paper mx-auto rounded-xl bg-slate-100 p-5 text-slate-900 shadow-2xl">
+      <div className="mb-4 rounded-xl border border-slate-300 bg-white p-4">
+        <div className="flex items-start justify-between gap-5">
+          <div>
+            <h2 className="flex items-center gap-2 text-2xl font-black text-slate-900"><Shield className="text-blue-600"/>TrafficVigil 分析报告</h2>
+            <p className="mt-2 text-sm text-slate-600">任务编号 <b>{profile.taskId}</b> · 报告编号 <b>{report[0]}</b></p>
+            <p className="mt-1 text-sm">任务名称 <b>{report[1]}</b></p>
+          </div>
+          <div className="grid grid-cols-[90px_110px] items-center gap-3 text-right">
+            <RiskTag level={report[4]} />
+            <GaugeCircle value={profile.score} />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-6 gap-3 text-sm">
+        {profile.conclusions.map(([label, value, tone]) => <div key={label} className="rounded-lg border border-slate-300 bg-white p-3"><b>{label}</b><p className={cx("mt-2 font-semibold", tone)}>{value}</p></div>)}
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white">
+          <PanelTitle title="基础信息"/>
+          {[["源 IP", report[3]], ["目的 IP", profile.destinationIp], ["协议", profile.protocol], ["设备类型", profile.deviceType], ["生成时间", report[2]]].map(([k, v]) => <p key={k} className="mb-1 flex justify-between gap-3 text-sm"><span className="text-slate-400">{k}</span><b>{v}</b></p>)}
+        </div>
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white">
+          <PanelTitle title="流量捕获摘要"/>
+          <Donut size={130} center={<><b>{profile.captureSize}</b><p className="text-xs text-slate-400">捕获总量</p></>} data={profile.captureSplit.map(([value, color]) => ({ value, color }))} />
+        </div>
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white">
+          <PanelTitle title="多层分类结果"/>
+          <div className="space-y-2">{profile.resultRows.map(([label, value, tone]) => <p key={label}>{label}<b className={cx("float-right", tone)}>{value}</b></p>)}</div>
+          <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm"><span className="text-slate-400">综合评分</span><b className={cx("float-right text-lg", riskColor)}>{profile.score}</b></div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] gap-3">
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="用户行为画像"/><RadarChart /></div>
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="公共群组匹配"/><RelationGraph selected={profile.resultRows[2][1].includes("高") ? "Group_Bravo" : ""} setSelected={()=>{}} /></div>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="风险研判"/><div className={cx("text-center text-6xl font-black", riskColor)}>{profile.score}</div><p className={cx("text-center", riskColor)}>{report[4]}</p></div>
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="证据链说明"/><p className="text-sm leading-7 text-slate-300">{profile.evidence}</p></div>
+        <div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="模型可信度说明"/><Donut size={120} center={<b>{profile.confidence}</b>} data={[{value:Number(profile.confidence.replace("%", "")),color:palette.blue}]} /></div>
+      </div>
+      <footer className="mt-4 flex justify-between text-sm text-slate-500"><span>TrafficVigil v2.4.1 自动生成</span><span>第 1 页 / 共 1 页</span></footer>
+    </div>
   );
 }
 function ReportPreview({ report }) { return <div className="mx-auto rounded-xl bg-slate-100 p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between rounded-xl border border-slate-300 p-4"><div><h2 className="flex items-center gap-2 text-2xl font-black text-slate-900"><Shield className="text-blue-600"/>TrafficVigil 分析报告</h2><p className="mt-3 text-sm">任务名称　<b>{report[1]}</b></p></div><div className="text-right"><p>报告编号：{report[0]}</p><div className="mt-3 flex items-center gap-4"><RiskTag level={report[4]}/><GaugeCircle value={92}/></div></div></div><div className="grid grid-cols-6 gap-3 text-sm">{["VPN 分类结论 恶意 VPN","SIM 分类结论 可疑 SIM","应用识别结论 可疑应用","行为嗅探结论 数据外传","群组匹配结论 高风险群组","模型置信度 96.4%"].map((x,i)=><div key={x} className="rounded-lg border border-slate-300 bg-white p-3"><b>{x.split(" ")[0]}</b><p className="mt-2 text-red-600">{x.split(" ").slice(1).join(" ")}</p></div>)}</div><div className="mt-3 grid grid-cols-3 gap-3"><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="基础信息"/><p>源 IP：192.168.1.88</p><p>目的 IP：45.77.233.12</p><p>协议：TLSv1.3</p><p>设备类型：Windows 10</p></div><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="流量捕获摘要"/><Donut size={130} center={<b>1.82 TB</b>} data={[{value:68.7,color:palette.blue},{value:18.3,color:palette.cyan},{value:6.2,color:palette.green},{value:3.1,color:palette.purple}]} /></div><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="多层分类结果"/><div className="space-y-2"><p>VPN 分类 <b className="float-right text-red-400">恶意 VPN</b></p><p>SIM 分类 <b className="float-right text-amber-400">可疑 SIM</b></p><p>群组匹配 <b className="float-right text-red-400">高风险群组</b></p></div></div></div><div className="mt-3 grid grid-cols-2 gap-3"><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="用户行为画像"/><RadarChart /></div><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="公共群组匹配"/><RelationGraph selected="" setSelected={()=>{}} /></div></div><div className="mt-3 grid grid-cols-3 gap-3"><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="风险研判"/><div className="text-center text-6xl font-black text-red-400">92</div><p className="text-center text-red-400">高危</p></div><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="证据链说明"/><p className="text-sm leading-7 text-slate-300">检测到 TLS 加密连接、VPN 隧道特征、可疑 SIM 通信、群组匹配路径，任务结果已自动归档。</p></div><div className="rounded-lg bg-[#0b1a2d] p-4 text-white"><PanelTitle title="模型可信度说明"/><Donut size={120} center={<b>96.4%</b>} data={[{value:96.4,color:palette.blue}]} /></div></div><footer className="mt-4 text-sm text-slate-500">本报告由 TrafficVigil v2.4.1 自动生成，仅供安全分析参考　第 1 页 / 共 1 页</footer></div>; }
 
 function ModelPage() { return <PageShell title="模型与技术展示" subtitle="特征建模 - 流量分类 - 行为关联"><div className="grid grid-cols-3 gap-4"><Card className="col-span-2"><PanelTitle title="系统技术架构"/><div className="grid grid-cols-3 gap-4">{[["预训练模型","通用网络流量预训练 + SIM 微调",Brain,palette.blue],["字节级图建模","Header Graph / Payload Graph / Fusion Graph",Network,palette.cyan],["多模态融合","流量元数据、时序模式、跨协议交互",Layers3,palette.purple],["GraphSAGE / GAT","跨粒度图表示学习",Activity,palette.green],["对抗性训练","高比例噪声流量增强鲁棒性",Shield,palette.amber],["报告生成","结构化研判与证据链输出",FileText,palette.red]].map(([t,s,Icon,c])=><div key={t} className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-5"><Icon style={{color:c}}/><h3 className="mt-3 text-xl font-bold">{t}</h3><p className="mt-2 text-sm text-slate-400">{s}</p></div>)}</div><div className="mt-6"><PanelTitle title="预训练 → 微调 → 推理流程"/><div className="flex items-center justify-between">{["大规模通用流量","自监督预训练","SIM 专项微调","对抗噪声增强","多层分类推理","行为与群组关联"].map((x,i)=><React.Fragment key={x}><div className="rounded-xl border border-blue-300/20 bg-blue-500/10 px-5 py-4 text-center">{x}</div>{i<5&&<ArrowRight className="text-cyan-400"/>}</React.Fragment>)}</div></div></Card><Card><PanelTitle title="性能指标"/>{[["SIM 提取准确率","98.7%",palette.cyan],["用户行为分析","90.2%",palette.blue],["群组匹配准确率","89.4%",palette.purple],["混合流量识别","94%",palette.green]].map(([t,v,c])=><div key={t} className="mb-5"><div className="mb-2 flex justify-between"><span>{t}</span><b style={{color:c}}>{v}</b></div><div className="h-3 rounded bg-slate-800"><div className="h-full rounded" style={{width:v,background:c}}/></div></div>)}</Card></div><div className="mt-4 grid grid-cols-2 gap-4"><Card><PanelTitle title="字节级流量图示意"/><RelationGraph selected="" setSelected={()=>{}} /></Card><Card><PanelTitle title="方法对比"/><DataTable columns={["方法","SIM 提取","行为分析","群组匹配","备注"]} rows={[["TrafficVigil","98.7%","90.2%","89.4%","多模态图神经网络"],["ET-BERT","78.2%","74.1%","--","预训练流量模型"],["GraphDApp","81.4%","76.5%","--","流级图建模"],["ECD-GNN","84.3%","79.8%","71.2%","粗粒度图结构"]]} /></Card></div></PageShell>; }
 
-function TasksPage({ go }) {
+function TasksPage({ go, setSelectedReport }) {
   const [statusFilter, setStatusFilter] = useState("全部状态");
   const [riskFilter, setRiskFilter] = useState("风险等级");
   const [typeFilter, setTypeFilter] = useState("检测类型");
   const [taskQuery, setTaskQuery] = useState("");
   const [taskRows, setTaskRows] = useState(() => Array.from({length:10}).map((_,i)=>[`TASK-20250519-${String(i+1).padStart(4,"0")}`,`capture_20250519_${142300+i}.pcap`,i%2?"快速检测":"完整检测",`2025-05-19 14:${20+i}:33`,i%3?"已完成":"运行中",["高危","中危","低危"][i%3],["Telegram","WhatsApp","Signal"][i%3],["chat","file","photo"][i%3],"查看报告","复现 / 删除"]));
   const visibleRows = taskRows.filter((row) => rowMatches(row, taskQuery) && (statusFilter === "全部状态" || row[4] === statusFilter) && (riskFilter === "风险等级" || row[5] === riskFilter) && (typeFilter === "检测类型" || row[2] === typeFilter));
-  return <PageShell title="任务历史" subtitle="管理所有流量检测任务记录" actions={<Button icon={Play} onClick={()=>go("workspace")}>创建新任务</Button>}><Card><div className="mb-4 flex flex-wrap gap-3"><SearchBox value={taskQuery} onChange={setTaskQuery} placeholder="搜索任务、文件、应用" className="flex-[1_1_220px]" /><SmallSelect label={statusFilter} options={["全部状态","已完成","运行中"]} onChange={setStatusFilter}/><SmallSelect label={riskFilter} options={["风险等级","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label={typeFilter} options={["检测类型","完整检测","快速检测"]} onChange={setTypeFilter}/></div><DataTable columns={["Task ID","File Name","Detection Mode","Created Time","Status","Risk Level","Top Application","Top Behavior","Report","Actions"]} rows={visibleRows} renderCell={(c,j,row)=> j===4 ? <span className={row[4] === "运行中" ? "text-blue-300" : "text-emerald-300"}>{c}</span> : j===5 ? <RiskTag level={c}/> : j===8 ? <button onClick={()=>go("reports")} className="text-cyan-300">{c}</button> : j===9 ? <div className="flex flex-wrap gap-2"><button onClick={()=>go("workspace")} className="text-cyan-300">复现</button><button onClick={()=>setTaskRows((items)=>items.filter((item)=>item[0] !== row[0]))} className="text-red-300">删除</button></div> : c}/><Pagination total={`共 ${visibleRows.length} 条`}/></Card></PageShell>;
+  return <PageShell title="任务历史" subtitle="管理所有流量检测任务记录" actions={<Button icon={Play} onClick={()=>go("workspace")}>创建新任务</Button>}><Card><div className="mb-4 flex flex-wrap gap-3"><SearchBox value={taskQuery} onChange={setTaskQuery} placeholder="搜索任务、文件、应用" className="flex-[1_1_220px]" /><SmallSelect label={statusFilter} options={["全部状态","已完成","运行中"]} onChange={setStatusFilter}/><SmallSelect label={riskFilter} options={["风险等级","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label={typeFilter} options={["检测类型","完整检测","快速检测"]} onChange={setTypeFilter}/></div><DataTable columns={["Task ID","File Name","Detection Mode","Created Time","Status","Risk Level","Top Application","Top Behavior","Report","Actions"]} rows={visibleRows} renderCell={(c,j,row,i)=> j===4 ? <span className={row[4] === "运行中" ? "text-blue-300" : "text-emerald-300"}>{c}</span> : j===5 ? <RiskTag level={c}/> : j===8 ? <button onClick={()=>{ setSelectedReport?.(reportForTask(row[0], i)); go("reports"); }} className="text-cyan-300">{c}</button> : j===9 ? <div className="flex flex-wrap gap-2"><button onClick={()=>go("workspace")} className="text-cyan-300">复现</button><button onClick={()=>setTaskRows((items)=>items.filter((item)=>item[0] !== row[0]))} className="text-red-300">删除</button></div> : c}/><Pagination total={`共 ${visibleRows.length} 条`}/></Card></PageShell>;
 }
 
 function SettingsPage({ initialTab = "模型配置", userName = "admin", setCurrentUser }) {

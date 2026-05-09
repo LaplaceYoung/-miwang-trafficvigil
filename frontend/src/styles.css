@@ -537,6 +537,26 @@ select:focus {
   min-height: 0;
 }
 
+.tv-bar-chart {
+  overflow: visible;
+}
+
+.tv-bar-track {
+  border-bottom: 1px solid rgba(148, 163, 184, .18);
+}
+
+.tv-bar-fill {
+  min-width: 18px;
+}
+
+.tv-bar-label {
+  min-height: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-wrap: anywhere;
+}
+
 .tv-chart-bar img {
   flex: 0 0 auto;
 }
@@ -563,7 +583,12 @@ select:focus {
 .tv-area-fill {
   opacity: 0;
   transform: translateY(8px);
-  animation: tvAreaFillRise 0.72s cubic-bezier(.22, 1, .36, 1) 0.12s both;
+  animation: tvAreaFillRise 0.72s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: calc(120ms + var(--tv-chart-delay, 0ms));
+}
+
+.tv-area-chart text {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
 }
 
 .tv-area-marker {
@@ -607,6 +632,32 @@ select:focus {
   transform-origin: center;
   animation: tvNodePop 0.42s cubic-bezier(.22, 1, .36, 1) both;
   animation-delay: var(--tv-chart-delay, 0ms);
+}
+
+.tv-series-card {
+  background:
+    linear-gradient(180deg, rgba(20, 136, 255, .08), transparent 52%),
+    rgba(2, 12, 27, .42);
+}
+
+.tv-series-chart text {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
+.tv-series-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 560;
+  stroke-dashoffset: 560;
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: tvSeriesDraw 0.92s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--tv-chart-delay, 0ms);
+}
+
+@keyframes tvSeriesDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes tvLineGrow {
