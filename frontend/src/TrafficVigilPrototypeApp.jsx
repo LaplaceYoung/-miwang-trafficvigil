@@ -394,7 +394,7 @@ function App() {
     if (route === "reports") return <ReportsPage {...props} />;
     if (route === "model") return <ModelPage />;
     if (route === "tasks") return <TasksPage go={go} />;
-    if (route === "settings") return <SettingsPage initialTab={settingsTab} userName={currentUser} />;
+    if (route === "settings") return <SettingsPage initialTab={settingsTab} userName={currentUser} setCurrentUser={setCurrentUser} />;
     return <DashboardPage go={go} />;
   }, [route, authed, selectedReport, settingsTab, currentUser]);
 
@@ -1203,12 +1203,25 @@ function TasksPage({ go }) {
   return <PageShell title="任务历史" subtitle="管理所有流量检测任务记录" actions={<Button icon={Play} onClick={()=>go("workspace")}>创建新任务</Button>}><Card><div className="mb-4 flex flex-wrap gap-3"><SearchBox value={taskQuery} onChange={setTaskQuery} placeholder="搜索任务、文件、应用" className="flex-[1_1_220px]" /><SmallSelect label={statusFilter} options={["全部状态","已完成","运行中"]} onChange={setStatusFilter}/><SmallSelect label={riskFilter} options={["风险等级","高危","中危","低危"]} onChange={setRiskFilter}/><SmallSelect label={typeFilter} options={["检测类型","完整检测","快速检测"]} onChange={setTypeFilter}/></div><DataTable columns={["Task ID","File Name","Detection Mode","Created Time","Status","Risk Level","Top Application","Top Behavior","Report","Actions"]} rows={visibleRows} renderCell={(c,j,row)=> j===4 ? <span className={row[4] === "运行中" ? "text-blue-300" : "text-emerald-300"}>{c}</span> : j===5 ? <RiskTag level={c}/> : j===8 ? <button onClick={()=>go("reports")} className="text-cyan-300">{c}</button> : j===9 ? <div className="flex flex-wrap gap-2"><button onClick={()=>go("workspace")} className="text-cyan-300">复现</button><button onClick={()=>setTaskRows((items)=>items.filter((item)=>item[0] !== row[0]))} className="text-red-300">删除</button></div> : c}/><Pagination total={`共 ${visibleRows.length} 条`}/></Card></PageShell>;
 }
 
-function SettingsPage({ initialTab = "模型配置", userName = "admin" }) {
+function SettingsPage({ initialTab = "模型配置", userName = "admin", setCurrentUser }) {
   const [tab,setTab]=useState(initialTab);
   const [savedAt, setSavedAt] = useState("");
   const [identityKey, setIdentityKey] = useState("TVK-8F7C3A21-9B6D1E4F");
   const [selectedTemplate, setSelectedTemplate] = useState("执法研判模板");
+  const [profile, setProfile] = useState({ name: userName, org: "密网巡哨实验室", email: `${userName}@trafficvigil.local` });
   useEffect(() => setTab(initialTab), [initialTab]);
+  useEffect(() => setProfile((value) => ({ ...value, name: userName, email: `${userName}@trafficvigil.local` })), [userName]);
+  const setProfileField = (field) => (event) => setProfile((value) => ({ ...value, [field]: event.target.value }));
+  const saveSettings = () => {
+    const now = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+    if (tab === "用户信息") {
+      const name = profile.name.trim() || userName;
+      setProfile((value) => ({ ...value, name }));
+      setCurrentUser?.(name);
+      toast("用户信息已保存");
+    }
+    setSavedAt(now);
+  };
   const tabs = ["用户信息","模型配置","协议适配","报告模板","数据脱敏","系统日志"];
   return (
     <PageShell title="系统设置" subtitle="配置用户信息、模型参数、协议适配、报告模板与数据脱敏">
@@ -1219,10 +1232,10 @@ function SettingsPage({ initialTab = "模型配置", userName = "admin" }) {
           {tab==="用户信息"&&(
             <div className="grid grid-cols-[1fr_280px] gap-4">
               <div className="space-y-4">
-                <Input label="用户名" icon={UserCircle} placeholder={userName} />
-                <Input label="所属单位" icon={Building2} placeholder="密网巡哨实验室" />
-                <Input label="邮箱" icon={Mail} placeholder={`${userName}@trafficvigil.local`} />
-                <Input label="身份密钥" icon={KeyRound} placeholder={identityKey} />
+                <Input label="用户名" icon={UserCircle} placeholder="请输入用户名" value={profile.name} onChange={setProfileField("name")} />
+                <Input label="所属单位" icon={Building2} placeholder="请输入所属单位" value={profile.org} onChange={setProfileField("org")} />
+                <Input label="邮箱" icon={Mail} placeholder="请输入邮箱" value={profile.email} onChange={setProfileField("email")} />
+                <Input label="身份密钥" icon={KeyRound} placeholder={identityKey} value={identityKey} onChange={(event)=>setIdentityKey(event.target.value)} />
               </div>
               <div className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4">
                 <UserCircle size={44} className="mb-3 text-cyan-300" />
@@ -1253,7 +1266,7 @@ function SettingsPage({ initialTab = "模型配置", userName = "admin" }) {
           {tab==="数据脱敏"&&<div className="space-y-3">{["IP 地址匿名化","MAC 地址匿名化","端口重映射","序列号随机化","时间戳清除"].map(x=><SwitchRow key={x} label={x}/>)}</div>}
           {tab==="系统日志"&&<DataTable columns={["Time","Level","Module","Message"]} rows={[["14:32:01","INFO","Model","加载特征模型成功"],["14:32:07","INFO","SIM","运行 SIM 分类模型"],["14:33:10","WARN","Group","发现高危群组匹配"],["14:35:22","INFO","Report","报告生成完成"]]} />}
           <div className="mt-5 flex flex-wrap gap-3">
-            <Button icon={Save} onClick={()=>setSavedAt(new Date().toLocaleTimeString("zh-CN", { hour12: false }))}>保存设置</Button>
+            <Button icon={Save} onClick={saveSettings}>保存设置</Button>
             <Button variant="ghost" icon={RefreshCw} onClick={()=>setSavedAt("已恢复推荐配置")}>恢复推荐配置</Button>
             {savedAt && <span className="self-center text-sm text-emerald-300">{tab}：{savedAt}</span>}
           </div>
