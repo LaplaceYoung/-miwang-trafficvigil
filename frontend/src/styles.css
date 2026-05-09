@@ -470,6 +470,13 @@ select:focus {
   padding: 0;
 }
 
+.tv-app .tv-search-input {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .tv-app button,
 .tv-button,
 .tv-icon-button,
