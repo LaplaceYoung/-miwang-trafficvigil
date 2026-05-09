@@ -524,7 +524,7 @@ function MiniMeter({ label, value }) {
 
 function TinyLine({ color = palette.blue }) {
   const points = "0,25 12,20 24,28 36,16 48,22 60,12 72,19 84,10 96,18 108,15 120,22 132,12 144,18 156,16 168,24 180,20";
-  return <svg viewBox="0 0 180 36" className="mt-2 h-9 w-full"><polyline points={points} fill="none" stroke={color} strokeWidth="2" opacity=".65" /></svg>;
+  return <svg viewBox="0 0 180 36" className="tv-line-chart mt-2 h-9 w-full"><polyline className="tv-line-path" points={points} fill="none" stroke={color} strokeWidth="2" opacity=".65" /></svg>;
 }
 
 function ChartTooltip({ tip }) {
@@ -596,13 +596,14 @@ function Donut({ data, center, size = 160, labels = [], onSegmentClick }) {
   const c = 2 * Math.PI * r;
   return (
     <div className="relative grid place-items-center" onMouseLeave={() => setTip(null)}>
-      <svg width={size} height={size} viewBox="0 0 120 120" className="-rotate-90">
+      <svg width={size} height={size} viewBox="0 0 120 120" className="tv-donut-chart -rotate-90">
         <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(148,163,184,.18)" strokeWidth="16" />
         {data.map((d, i) => {
           const len = (d.value / 100) * c;
           const dash = `${len} ${c - len}`;
           const label = d.label || labels[i] || `分段 ${i + 1}`;
-          const el = <circle key={i} cx="60" cy="60" r={r} fill="none" stroke={d.color} strokeWidth="16" strokeLinecap="butt" strokeDasharray={dash} strokeDashoffset={-start} className="cursor-pointer transition-opacity hover:opacity-80" onMouseEnter={() => setTip({ title: label, body: `${d.value}%`, x: size / 2 + 12, y: size / 2 - 22 })} onClick={() => onSegmentClick ? onSegmentClick(d, i) : toast(`${label} ${d.value}%`)} />;
+          const finalOffset = -start;
+          const el = <circle key={i} cx="60" cy="60" r={r} fill="none" stroke={d.color} strokeWidth="16" strokeLinecap="butt" strokeDasharray={dash} strokeDashoffset={finalOffset} style={{ "--tv-donut-offset": finalOffset, "--tv-donut-enter-offset": finalOffset + c, "--tv-chart-delay": `${i * 90}ms` }} className="tv-donut-segment cursor-pointer transition-opacity hover:opacity-80" onMouseEnter={() => setTip({ title: label, body: `${d.value}%`, x: size / 2 + 12, y: size / 2 - 22 })} onClick={() => onSegmentClick ? onSegmentClick(d, i) : toast(`${label} ${d.value}%`)} />;
           start += len;
           return el;
         })}
@@ -617,11 +618,11 @@ function BarChart({ items, max = 50, height = 92, onBarClick, showAppIcons = fal
   const [tip, setTip] = useState(null);
   return (
     <div className="relative grid h-full grid-cols-[repeat(auto-fit,minmax(64px,1fr))] items-end gap-2 px-1 pt-1" style={{ minHeight: height + (showAppIcons ? 74 : 46) }} onMouseLeave={() => setTip(null)}>
-      {items.map((it) => (
+      {items.map((it, index) => (
         <button key={it.label} type="button" onMouseEnter={(event) => setTip({ title: it.label, body: `${it.value}%`, x: event.currentTarget.offsetLeft + 4, y: 6 })} onClick={() => onBarClick ? onBarClick(it) : toast(`${it.label} ${it.value}%`)} className="tv-chart-bar flex min-w-0 flex-col items-center gap-2 rounded-lg border border-transparent p-1.5 hover:border-cyan-300/20 hover:bg-cyan-400/5">
           {showAppIcons && <AppIcon app={it.label} size={22} />}
           <div className="text-xs font-semibold text-slate-100">{it.value}%</div>
-          <div className="w-full max-w-8 rounded-t-lg shadow-lg" style={{ height: `${Math.max(14, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)` }} />
+          <div className="tv-bar-fill w-full max-w-8 rounded-t-lg shadow-lg" style={{ height: `${Math.max(14, (it.value / max) * height)}px`, background: `linear-gradient(${it.color}, ${it.color}88)`, "--tv-chart-delay": `${index * 70}ms` }} />
           <div className="w-full break-words text-center text-[11px] leading-tight text-slate-300">{it.label}</div>
         </button>
       ))}
@@ -636,16 +637,16 @@ function AreaLine({ color = palette.blue, height = 170, onPointClick }) {
   const pts = points.map((p) => p.join(",")).join(" ");
   return (
     <div className="relative" onMouseLeave={() => setTip(null)}>
-      <svg viewBox="0 0 800 220" className="h-full w-full" style={{ minHeight: height }}>
+      <svg viewBox="0 0 800 220" className="tv-area-chart h-full w-full" style={{ minHeight: height }}>
         <defs><linearGradient id={`g-${color}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".35" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
         {[40,80,120,160,200].map((y) => <line key={y} x1="0" x2="800" y1={y} y2={y} stroke="rgba(148,163,184,.12)" />)}
         {[100,200,300,400,500,600,700].map((x) => <line key={x} y1="20" y2="205" x1={x} x2={x} stroke="rgba(148,163,184,.08)" />)}
-        <polygon points={`0,220 ${pts} 800,220`} fill={`url(#g-${color})`} />
-        <polyline points={pts} fill="none" stroke={color} strokeWidth="3" />
+        <polygon className="tv-area-fill" points={`0,220 ${pts} 800,220`} fill={`url(#g-${color})`} />
+        <polyline className="tv-area-path" points={pts} fill="none" stroke={color} strokeWidth="3" />
         {points.map(([x, y], i) => (
           <circle key={i} cx={x} cy={y} r="12" fill="transparent" className="cursor-pointer" onMouseEnter={() => setTip({ title: `采样点 ${i + 1}`, body: `${Math.round(220 - y)} Mbps`, x: Math.min(640, x + 12), y: Math.max(6, y - 44) })} onClick={() => onPointClick ? onPointClick(i) : toast(`采样点 ${i + 1} 已选中`)} />
         ))}
-        <circle cx="520" cy="120" r="5" fill={color} />
+        <circle className="tv-area-marker" cx="520" cy="120" r="5" fill={color} />
       </svg>
       <ChartTooltip tip={tip} />
     </div>
@@ -928,12 +929,29 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
 }
 
+const supportedTrafficExtensions = [".pcap", ".pcapng"];
+
+function getTrafficFileExtension(fileName = "") {
+  const index = fileName.lastIndexOf(".");
+  return index >= 0 ? fileName.slice(index).toLowerCase() : "";
+}
+
+function validateTrafficFile(file) {
+  const extension = getTrafficFileExtension(file?.name || "");
+  if (!supportedTrafficExtensions.includes(extension)) {
+    return "请上传 .pcap 或 .pcapng 格式的流量文件";
+  }
+  return "";
+}
+
 function CapturePage({ go }) {
   const [upload, setUpload] = useState(0);
   const [fileInfo, setFileInfo] = useState(null);
   const [running, setRunning] = useState(false);
-  const [packets, setPackets] = useState(186542);
-  const [elapsed, setElapsed] = useState(156);
+  const [captureStarted, setCaptureStarted] = useState(false);
+  const [captureStartedAt, setCaptureStartedAt] = useState("");
+  const [packets, setPackets] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const [selectedNic, setSelectedNic] = useState("Intel(R) Wi‑Fi 6 AX201 160MHz (192.168.1.88)");
   const [captureDuration, setCaptureDuration] = useState("00 : 10 : 00");
   const [selectedProtocols, setSelectedProtocols] = useState(["TCP","UDP","TLS 1.3","QUIC","WireGuard"]);
@@ -947,6 +965,11 @@ function CapturePage({ go }) {
   useEffect(() => () => uploadTimerRef.current && clearInterval(uploadTimerRef.current), []);
   const startUpload = (file) => {
     if (!file) return;
+    const error = validateTrafficFile(file);
+    if (error) {
+      toast(error);
+      return;
+    }
     if (uploadTimerRef.current) clearInterval(uploadTimerRef.current);
     setFileInfo({ name: file.name, size: file.size, type: file.type || "application/vnd.tcpdump.pcap" });
     setUpload(0);
@@ -960,10 +983,34 @@ function CapturePage({ go }) {
       }
     }, 180);
   };
+  const handleFileSelect = (event) => {
+    startUpload(event.target.files?.[0]);
+    event.target.value = "";
+  };
+  const handleFileDrop = (event) => {
+    event.preventDefault();
+    startUpload(event.dataTransfer.files?.[0]);
+  };
   const removeFile = () => {
     if (uploadTimerRef.current) clearInterval(uploadTimerRef.current);
     setFileInfo(null);
     setUpload(0);
+  };
+  const startCapture = () => {
+    setCaptureStarted(true);
+    setRunning(true);
+    setPackets(0);
+    setElapsed(0);
+    setCaptureStartedAt(new Date().toLocaleString("zh-CN", { hour12: false }));
+    toast(`实时抓取已启动：${selectedNic}`);
+  };
+  const stopCapture = () => {
+    if (!captureStarted) {
+      toast("当前没有运行中的抓取任务");
+      return;
+    }
+    setRunning(false);
+    toast("实时抓取已停止");
   };
   const rows = [
     ["1", "14:32:45.123456", "192.168.1.88:52344", "93.184.216.34:443", "TLS 1.3", "517", "Client Hello", "TLS 1.3"],
@@ -984,19 +1031,28 @@ function CapturePage({ go }) {
   };
   const visibleRows = rows.filter((row) => selectedProtocols.some((protocol) => row[4] === protocol || row[7] === protocol || row[6].includes(protocol)));
   const displayDuration = captureDuration.replace(/\s/g, "");
+  const durationSeconds = displayDuration.split(":").map(Number).reduce((total, value) => total * 60 + value, 0);
+  const capturePercent = durationSeconds ? Math.min(100, Math.round((elapsed / durationSeconds) * 100)) : 0;
+  const uploadReady = Boolean(fileInfo && upload === 100);
+  const canEnterWorkspace = uploadReady || captureStarted;
+  const taskDetails = captureStarted
+    ? [["开始时间", captureStartedAt], ["运行时长", formatTime(elapsed)], ["数据源", selectedNic], ["抓取时长", displayDuration]]
+    : uploadReady
+      ? [["文件名称", fileInfo.name], ["文件大小", formatBytes(fileInfo.size)], ["文件状态", "已完成上传"], ["下一步", "进入综合检测"]]
+      : [["数据源", "等待 PCAP 文件或实时抓取"], ["允许格式", ".pcap / .pcapng"], ["抓取状态", "待启动"], ["处理入口", "准备中"]];
   return (
     <PageShell title="流量捕获中心" subtitle="上传 PCAP 文件或进行实时抓取，获取网络数据包用于检测与分析">
       <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-4">
-        <Card><PanelTitle title="PCAP 文件上传" /><input id={fileInputId} type="file" accept=".pcap,.pcapng,application/vnd.tcpdump.pcap" className="sr-only" onChange={(event) => startUpload(event.target.files?.[0])} /><label htmlFor={fileInputId} className="grid h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-cyan-300/35 bg-slate-950/30 text-center hover:bg-cyan-400/5"><div><UploadCloud className="mx-auto mb-3 text-cyan-300" size={45}/><p>将 PCAP / PCAPNG 文件拖到此处，或点击选择文件</p><p className="mt-2 text-sm text-slate-500">支持格式：.pcap / .pcapng</p></div></label><div className="mt-4 flex items-center justify-between rounded-lg border border-cyan-300/12 bg-slate-950/35 px-4 py-3 text-sm"><span><FileText size={16} className="mr-2 inline" />{fileInfo?.name || "尚未选择文件"}</span><span>{fileInfo ? formatBytes(fileInfo.size) : "--"} {fileInfo && <button type="button" aria-label="移除文件" onClick={removeFile}><X size={15} className="ml-2 inline cursor-pointer" /></button>}</span></div><div className="mt-5"><div className="mb-2 flex justify-between text-sm"><span>上传进度</span><b>{upload}%</b></div><div className="h-3 rounded-full bg-slate-800"><div className="h-full rounded-full bg-blue-500 transition-all duration-300" style={{ width: `${upload}%` }} /></div><div className="mt-3 flex justify-between text-sm text-slate-400"><span>已上传：{fileInfo ? formatBytes(Math.round(fileInfo.size * upload / 100)) : "0 B"} / {fileInfo ? formatBytes(fileInfo.size) : "--"}</span><span>状态：<b className={upload === 100 ? "text-emerald-300" : "text-cyan-300"}>{upload === 100 ? "上传完成" : fileInfo ? "正在上传" : "等待文件"}</b></span></div></div></Card>
-        <Card><PanelTitle title="实时抓取" /><div className="space-y-4"><ControlRow label="选择网卡"><ToggleGroup items={["WLAN","Ethernet","Loopback"]} active="WLAN" /></ControlRow><SelectLine text={selectedNic} options={["Intel(R) Wi‑Fi 6 AX201 160MHz (192.168.1.88)","Realtek PCIe GbE Controller (10.24.0.18)","Npcap Loopback Adapter (127.0.0.1)"]} onChange={setSelectedNic} /><ControlRow label="抓取时长"><SelectLine text={captureDuration} options={["00 : 05 : 00","00 : 10 : 00","00 : 30 : 00","01 : 00 : 00"]} onChange={setCaptureDuration} /></ControlRow><ControlRow label="协议过滤"><div className="flex flex-wrap gap-2">{["TCP","UDP","TLS 1.3","QUIC","WireGuard"].map(x => <button type="button" key={x} onClick={() => toggleProtocol(x)} aria-pressed={selectedProtocols.includes(x)} className={cx("tv-button rounded-md border px-2 py-1 text-xs", selectedProtocols.includes(x) ? "border-blue-400/45 bg-blue-500/20 text-cyan-200" : "border-cyan-300/10 bg-slate-900/30 text-slate-500")}>{x}<X size={12} className="ml-1 inline" /></button>)}</div></ControlRow><div className="grid grid-cols-2 gap-4 pt-2"><Button onClick={() => { setRunning(true); toast(`实时抓取已启动：${selectedNic}`); }} icon={Play}>开始抓取</Button><Button onClick={() => { setRunning(false); toast("实时抓取已停止"); }} variant="ghost" icon={Square}>停止抓取</Button></div></div></Card>
-        <Card><div className="mb-3 flex justify-between"><h3 className="text-lg font-bold">任务状态</h3><span className={cx("rounded-full px-3 py-1 text-xs", running ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700 text-slate-300")}>{running ? "进行中" : "待启动"}</span></div><div className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><div className="mb-4 flex items-center gap-3 text-cyan-300"><CircleDot />{running ? "实时抓取中" : "等待抓取"}</div>{[["开始时间","2025-05-19 14:30:15"],["运行时长", formatTime(elapsed)],["数据源", selectedNic],["抓取时长", displayDuration]].map(r => <div className="mb-3 flex justify-between text-sm" key={r[0]}><span className="text-slate-400">{r[0]}</span><span>{r[1]}</span></div>)}</div><Button onClick={() => go("workspace")} className="mt-4 w-full" icon={ArrowRight}>进入综合检测</Button></Card>
+        <Card><PanelTitle title="PCAP 文件上传" /><input id={fileInputId} type="file" accept=".pcap,.pcapng" className="sr-only" onChange={handleFileSelect} /><label htmlFor={fileInputId} onDrop={handleFileDrop} onDragOver={(event) => event.preventDefault()} className="grid h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-cyan-300/35 bg-slate-950/30 text-center hover:bg-cyan-400/5"><div><UploadCloud className="mx-auto mb-3 text-cyan-300" size={45}/><p>将 PCAP / PCAPNG 文件拖到此处，或点击选择文件</p><p className="mt-2 text-sm text-slate-500">支持格式：.pcap / .pcapng</p></div></label><div className="mt-4 flex items-center justify-between rounded-lg border border-cyan-300/12 bg-slate-950/35 px-4 py-3 text-sm"><span><FileText size={16} className="mr-2 inline" />{fileInfo?.name || "尚未选择文件"}</span><span>{fileInfo ? formatBytes(fileInfo.size) : "--"} {fileInfo && <button type="button" aria-label="移除文件" onClick={removeFile}><X size={15} className="ml-2 inline cursor-pointer" /></button>}</span></div>{fileInfo && <div className="mt-5"><div className="mb-2 flex justify-between text-sm"><span>上传进度</span><b>{upload}%</b></div><div className="h-3 rounded-full bg-slate-800"><div className="tv-progress-fill h-full rounded-full bg-blue-500 transition-all duration-300" style={{ width: `${upload}%` }} /></div><div className="mt-3 flex justify-between text-sm text-slate-400"><span>已上传：{formatBytes(Math.round(fileInfo.size * upload / 100))} / {formatBytes(fileInfo.size)}</span><span>状态：<b className={upload === 100 ? "text-emerald-300" : "text-cyan-300"}>{upload === 100 ? "上传完成" : "正在上传"}</b></span></div></div>}</Card>
+        <Card><PanelTitle title="实时抓取" /><div className="space-y-4"><ControlRow label="选择网卡"><ToggleGroup items={["WLAN","Ethernet","Loopback"]} active="WLAN" /></ControlRow><SelectLine text={selectedNic} options={["Intel(R) Wi‑Fi 6 AX201 160MHz (192.168.1.88)","Realtek PCIe GbE Controller (10.24.0.18)","Npcap Loopback Adapter (127.0.0.1)"]} onChange={setSelectedNic} /><ControlRow label="抓取时长"><SelectLine text={captureDuration} options={["00 : 05 : 00","00 : 10 : 00","00 : 30 : 00","01 : 00 : 00"]} onChange={setCaptureDuration} /></ControlRow><ControlRow label="协议过滤"><div className="flex flex-wrap gap-2">{["TCP","UDP","TLS 1.3","QUIC","WireGuard"].map(x => <button type="button" key={x} onClick={() => toggleProtocol(x)} aria-pressed={selectedProtocols.includes(x)} className={cx("tv-button rounded-md border px-2 py-1 text-xs", selectedProtocols.includes(x) ? "border-blue-400/45 bg-blue-500/20 text-cyan-200" : "border-cyan-300/10 bg-slate-900/30 text-slate-500")}>{x}<X size={12} className="ml-1 inline" /></button>)}</div></ControlRow><div className="grid grid-cols-2 gap-4 pt-2"><Button onClick={startCapture} icon={Play}>开始抓取</Button><Button onClick={stopCapture} variant="ghost" icon={Square}>停止抓取</Button></div></div></Card>
+        <Card><div className="mb-3 flex justify-between"><h3 className="text-lg font-bold">任务状态</h3><span className={cx("rounded-full px-3 py-1 text-xs", running ? "bg-emerald-500/15 text-emerald-300" : uploadReady ? "bg-cyan-500/15 text-cyan-300" : "bg-slate-700 text-slate-300")}>{running ? "进行中" : uploadReady ? "文件就绪" : "待启动"}</span></div><div className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><div className="mb-4 flex items-center gap-3 text-cyan-300"><CircleDot />{running ? "实时抓取中" : uploadReady ? "PCAP 已就绪" : "等待数据源"}</div>{taskDetails.map(r => <div className="mb-3 flex justify-between gap-3 text-sm" key={r[0]}><span className="text-slate-400">{r[0]}</span><span className="text-right">{r[1]}</span></div>)}</div><Button onClick={() => canEnterWorkspace ? go("workspace") : toast("请先上传流量文件或启动实时抓取")} className="mt-4 w-full" icon={ArrowRight}>进入综合检测</Button></Card>
       </div>
-      <Card className="mt-4"><div className="grid grid-cols-[260px_1fr] gap-5"><div><PanelTitle title="抓取进度" /><div className="flex items-center gap-5"><Donut size={120} center={<b className="text-2xl text-blue-300">{Math.round((elapsed/600)*100)}%</b>} data={[{value:Math.round((elapsed/600)*100),color:palette.blue}]} /><div><p>已运行 {formatTime(elapsed)} / {displayDuration}</p><p className="mt-2 text-slate-400">预计剩余 00:07:24</p></div></div></div><div><PanelTitle title="数据包动态统计" /><div className="grid grid-cols-5 gap-3">{[["总数据包", packets],["TCP 包", 102341],["UDP 包", 56782],["加密包", 27419],["丢弃包", 1238]].map(([t,v],i) => <div key={t} className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><p className="text-slate-400">{t}</p><b className="mt-1 block text-2xl">{v.toLocaleString()}</b><span className="text-xs text-emerald-300">↑ {i+12}.0%</span></div>)}</div></div></div></Card>
-      <Card className="mt-4"><PanelTitle title="数据包预览" /><DataTable columns={["No.","Time","Source","Destination","Protocol","Length","Info","Encrypted Tag"]} rows={visibleRows} renderCell={(c,j)=> j===7 && c!=="-" ? <span className="text-cyan-300"><Lock size={14} className="mr-1 inline" />{c}</span> : c} /><Pagination total={`显示 ${visibleRows.length} / 1000 条`} /></Card>
+      {captureStarted ? <Card className="mt-4"><div className="grid grid-cols-[260px_1fr] gap-5"><div><PanelTitle title="抓取进度" /><div className="flex items-center gap-5"><Donut size={120} center={<b className="text-2xl text-blue-300">{capturePercent}%</b>} data={[{value:capturePercent,color:palette.blue}]} /><div><p>已运行 {formatTime(elapsed)} / {displayDuration}</p><p className="mt-2 text-slate-400">预计剩余 {formatTime(Math.max(durationSeconds - elapsed, 0))}</p></div></div></div><div><PanelTitle title="数据包动态统计" /><div className="grid grid-cols-5 gap-3">{[["总数据包", packets],["TCP 包", Math.round(packets * 0.55)],["UDP 包", Math.round(packets * 0.31)],["加密包", Math.round(packets * 0.15)],["丢弃包", Math.round(packets * 0.006)]].map(([t,v],i) => <div key={t} className="rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><p className="text-slate-400">{t}</p><b className="mt-1 block text-2xl">{v.toLocaleString()}</b><span className="text-xs text-emerald-300">↑ {i+12}.0%</span></div>)}</div></div></div></Card> : <Card className="mt-4"><EmptyTableState message="启动实时抓取后显示抓取进度和数据包动态统计" /></Card>}
+      {captureStarted ? <Card className="mt-4"><PanelTitle title="数据包预览" /><DataTable columns={["No.","Time","Source","Destination","Protocol","Length","Info","Encrypted Tag"]} rows={visibleRows} renderCell={(c,j)=> j===7 && c!=="-" ? <span className="text-cyan-300"><Lock size={14} className="mr-1 inline" />{c}</span> : c} /><Pagination total={`显示 ${visibleRows.length} / 1000 条`} /></Card> : <Card className="mt-4"><PanelTitle title="数据包预览" /><EmptyTableState message="数据包将在抓取启动后实时写入预览表" /></Card>}
     </PageShell>
   );
 }
-function formatTime(s) { const m = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0"); return `00:${m}:${ss}`; }
+function formatTime(s) { const h = String(Math.floor(s/3600)).padStart(2,"0"), m = String(Math.floor((s % 3600)/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0"); return `${h}:${m}:${ss}`; }
 function ControlRow({ label, children }) { return <div className="grid grid-cols-[90px_1fr] items-center gap-3"><span className="text-slate-300">{label}</span>{children}</div>; }
 function ToggleGroup({ items, active }) {
   const [selected, setSelected] = useState(active);
@@ -1018,29 +1074,68 @@ function Pagination({ total }) {
 }
 
 function WorkspacePage({ go }) {
-  const [running, setRunning] = useState(false);
-  const [step, setStep] = useState(3);
-  const [progress, setProgress] = useState(39.1);
+  const [status, setStatus] = useState("idle");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const workspaceFileInputId = useId();
   useEffect(() => {
-    if (!running) return;
+    if (status !== "running") return;
     let idx = 0;
     const t = setInterval(() => {
-      idx += 1; setStep(Math.min(7, 3 + Math.floor(idx / 4))); setProgress(p => Math.min(100, p + 6.4));
-      if (idx > 18) { clearInterval(t); setRunning(false); setStep(7); setProgress(100); toast("综合检测完成，已生成报告草稿"); }
+      idx += 1;
+      setStep(Math.min(7, Math.floor(idx / 3)));
+      setProgress(p => Math.min(100, p + 5.4));
+      if (idx > 22) { clearInterval(t); setStatus("complete"); setStep(7); setProgress(100); toast("综合检测完成，已生成报告草稿"); }
     }, 600);
     return () => clearInterval(t);
-  }, [running]);
+  }, [status]);
+  const handleWorkspaceFile = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const error = validateTrafficFile(file);
+    if (error) {
+      toast(error);
+      return;
+    }
+    setSelectedFile({ name: file.name, size: file.size });
+    setStatus("idle");
+    setStep(0);
+    setProgress(0);
+    toast(`${file.name} 已选择`);
+  };
+  const startDetection = () => {
+    if (!selectedFile) {
+      toast("请先选择 .pcap 或 .pcapng 流量文件");
+      return;
+    }
+    setStatus("running");
+    setStep(0);
+    setProgress(0);
+    toast("综合检测已启动");
+  };
   const steps = ["选择流量数据","流量预处理","VPN / 非 VPN 分类","SIM / 非 SIM 分类","IM 应用分类","行为嗅探","公共群组匹配","生成分析报告"];
+  const started = status !== "idle";
+  const complete = status === "complete";
+  const logLines = ["14:32:01  开始加载特征模型与预训练权重...","14:32:03  解析流量特征向量 (Flow Features)...","14:32:04  提取设备指纹与通信模式特征...","14:32:06  构建 SIM 行为特征图谱...","14:32:07  运行 SIM 分类模型 (v2.4.1)...","14:32:23  已处理流量：" + formatBytes(Math.round((selectedFile?.size || 0) * progress / 100)),"14:32:27  识别候选 SIM 流量：6,842 条","14:32:27  正在优化分类阈值与置信度..."];
+  const visibleLogs = complete ? logLines : logLines.slice(0, Math.min(logLines.length, Math.max(2, step + 2)));
+  const stepStatus = (index) => {
+    if (complete || (started && index < step)) return "Success";
+    if (status === "running" && index === step) return "Running";
+    return "Pending";
+  };
   return (
     <PageShell title={<span>综合检测工作台 <span className="ml-2 rounded-md bg-blue-500/20 px-2 text-base text-cyan-300">P05</span></span>} subtitle="一键式端到端检测流程，自动化识别与分析暗网/隐蔽通信行为" actions={<Button variant="ghost" icon={Folder} onClick={() => go("tasks")}>任务历史</Button>}>
-      <Card><div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)] gap-3"><ConfigBox title="选择 PCAP" value="sample_traffic_0519.pcap" ok /><ConfigBox title="检测模式" value={<ToggleGroup items={["快速检测","完整检测"]} active="完整检测" />} /><ConfigBox title="目标协议" value="全部协议" select /><ConfigBox title="目标应用" value="全部应用" select /><Button onClick={() => { setRunning(true); setStep(0); setProgress(0); toast("综合检测已启动"); }} className="h-full" icon={Play}>开始综合检测</Button></div></Card>
-      <div className="my-6 flex items-center justify-between px-10">{steps.map((s,i) => <React.Fragment key={s}><div className="text-center"><div className={cx("mx-auto grid h-14 w-14 place-items-center rounded-full border text-xl", i < step ? "border-emerald-400 bg-emerald-500/15 text-emerald-300" : i === step ? "border-blue-400 bg-blue-500/25 text-blue-200 animate-pulse" : "border-slate-500 bg-slate-900 text-slate-400")}>{i < step ? <CheckCircle2/> : iconsForStep(i)}</div><div className={cx("mt-2 text-sm", i===step && "text-cyan-300")}>{s}</div></div>{i<steps.length-1 && <div className={cx("h-1 flex-1", i < step ? "bg-emerald-400/70" : "bg-slate-700")}/>}</React.Fragment>)}</div>
-      <div className="grid grid-cols-[minmax(0,0.72fr)_minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4">
-        <Card><PanelTitle title="检测流程步骤" />{steps.map((s,i) => <div key={s} className="mb-3 grid grid-cols-[28px_1fr_86px_70px] items-center gap-2 text-sm"><span className={cx("grid h-7 w-7 place-items-center rounded-full border", i < step ? "border-emerald-400 text-emerald-300" : i === step ? "border-blue-400 text-blue-300" : "border-slate-600 text-slate-400")}>{i+1}</span><span>{s}</span><span className={cx("rounded-md px-2 py-1 text-center text-xs", i < step ? "bg-emerald-500/15 text-emerald-300" : i === step ? "bg-blue-500/15 text-blue-300" : "bg-slate-700/40 text-slate-400")}>{i < step ? "Success" : i === step ? "Running" : "Pending"}</span><span className="text-slate-500">{i<step?"00:0"+(i+5):i===step?"00:27":"--:--"}</span></div>)}</Card>
-        <Card><PanelTitle title={<span>当前步骤：<span className="text-cyan-300">{steps[step] || "生成分析报告"}</span></span>} /><div className="grid grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] gap-4"><div className="h-[270px] overflow-auto rounded-xl border border-cyan-300/12 bg-slate-950/30 p-4 font-mono text-sm text-slate-300">{["14:32:01  开始加载特征模型与预训练权重...","14:32:03  解析流量特征向量 (Flow Features)...","14:32:04  提取设备指纹与通信模式特征...","14:32:06  构建 SIM 行为特征图谱...","14:32:07  运行 SIM 分类模型 (v2.4.1)...","14:32:23  已处理流量：712.31 GB","14:32:27  识别候选 SIM 流量：6,842 条","14:32:27  正在优化分类阈值与置信度..."].map(x=><p key={x} className="mb-3">{x}</p>)}</div><div className="space-y-4"><Card className="bg-slate-950/25"><Donut size={130} center={<><b className="text-2xl text-blue-300">{progress.toFixed(1)}%</b><p className="text-xs">712.31 GB / 1.82 TB</p></>} data={[{value:progress,color:palette.blue}]} /></Card><Card className="bg-slate-950/25"><PanelTitle title="特征匹配强度" /><TinyLine color={palette.purple}/></Card></div></div></Card>
+      <Card><div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)] gap-3"><div className="rounded-xl border border-cyan-300/15 bg-slate-950/30 p-3"><p className="text-xs text-slate-400">选择 PCAP</p><input id={workspaceFileInputId} type="file" accept=".pcap,.pcapng" className="sr-only" onChange={handleWorkspaceFile} /><label htmlFor={workspaceFileInputId} className="mt-1.5 flex cursor-pointer items-center justify-between gap-2 font-medium text-slate-100"><span className="min-w-0 truncate">{selectedFile?.name || "请选择 .pcap / .pcapng 文件"}</span>{selectedFile ? <CheckCircle2 className="text-emerald-300" size={17}/> : <UploadCloud className="text-cyan-300" size={17}/>}</label></div><ConfigBox title="检测模式" value={<ToggleGroup items={["快速检测","完整检测"]} active="完整检测" />} /><ConfigBox title="目标协议" value="全部协议" select /><ConfigBox title="目标应用" value="全部应用" select /><Button onClick={startDetection} className="h-full" icon={Play}>{status === "running" ? "检测进行中" : "开始综合检测"}</Button></div></Card>
+      <div className="my-6 flex items-center justify-between px-10">{steps.map((s,i) => { const current = stepStatus(i); return <React.Fragment key={s}><div className="text-center"><div className={cx("mx-auto grid h-14 w-14 place-items-center rounded-full border text-xl", current === "Success" ? "border-emerald-400 bg-emerald-500/15 text-emerald-300" : current === "Running" ? "border-blue-400 bg-blue-500/25 text-blue-200 animate-pulse" : "border-slate-500 bg-slate-900 text-slate-400")}>{current === "Success" ? <CheckCircle2/> : iconsForStep(i)}</div><div className={cx("mt-2 text-sm", current === "Running" && "text-cyan-300")}>{s}</div></div>{i<steps.length-1 && <div className={cx("h-1 flex-1", current === "Success" ? "bg-emerald-400/70" : "bg-slate-700")}/>}</React.Fragment>; })}</div>
+      {started ? <div className="grid grid-cols-[minmax(0,0.72fr)_minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4">
+        <Card><PanelTitle title="检测流程步骤" />{steps.map((s,i) => { const current = stepStatus(i); return <div key={s} className="mb-3 grid grid-cols-[28px_1fr_86px_70px] items-center gap-2 text-sm"><span className={cx("grid h-7 w-7 place-items-center rounded-full border", current === "Success" ? "border-emerald-400 text-emerald-300" : current === "Running" ? "border-blue-400 text-blue-300" : "border-slate-600 text-slate-400")}>{i+1}</span><span>{s}</span><span className={cx("rounded-md px-2 py-1 text-center text-xs", current === "Success" ? "bg-emerald-500/15 text-emerald-300" : current === "Running" ? "bg-blue-500/15 text-blue-300" : "bg-slate-700/40 text-slate-400")}>{current}</span><span className="text-slate-500">{current === "Success" ? "00:0"+(i+5) : current === "Running" ? "00:27" : "--:--"}</span></div>; })}</Card>
+        <Card><PanelTitle title={<span>当前步骤：<span className="text-cyan-300">{complete ? "生成分析报告" : steps[step]}</span></span>} /><div className="grid grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] gap-4"><div className="h-[270px] overflow-auto rounded-xl border border-cyan-300/12 bg-slate-950/30 p-4 font-mono text-sm text-slate-300">{visibleLogs.map(x=><p key={x} className="mb-3">{x}</p>)}</div><div className="space-y-4"><Card className="bg-slate-950/25"><Donut size={130} center={<><b className="text-2xl text-blue-300">{progress.toFixed(1)}%</b><p className="text-xs">{formatBytes(Math.round((selectedFile?.size || 0) * progress / 100))} / {formatBytes(selectedFile?.size || 0)}</p></>} data={[{value:progress,color:palette.blue}]} /></Card><Card className="bg-slate-950/25"><PanelTitle title="特征匹配强度" /><TinyLine color={palette.purple}/></Card></div></div></Card>
         <Card><PanelTitle title="SIM 候选分布（置信度）" /><BarChart height={205} max={20} items={[{label:"0-0.2",value:3.4,color:palette.purple},{label:"0.2-0.4",value:7.1,color:palette.purple},{label:"0.4-0.6",value:11.4,color:palette.purple},{label:"0.6-0.8",value:9.1,color:palette.purple},{label:"0.8-1.0",value:5.5,color:palette.purple}]} /></Card>
       </div>
-      <div className="mt-4 grid grid-cols-6 gap-4">{[["VPN 置信度","94.8%","VPN 流量占比 43.4%",Globe2,palette.cyan],["SIM 置信度","89.4%","SIM 流量占比 39.1%",TableProperties,palette.purple],["应用分类 Top 3","Telegram","总计占比 79.6%",MessageCircle,palette.green],["行为分类 Top 3","加密通信","总计占比 84.1%",Eye,palette.blue],["群组匹配 Top 5","TG-8f3a...7c21","",Users,palette.cyan],["综合风险等级","高风险","风险评分 82 / 100",AlertTriangle,palette.red]].map(([t,v,s,Icon,c]) => <Card key={t}><div className="flex items-center gap-2 text-slate-400"><Icon size={18} style={{color:c}} />{t}</div><div className="mt-4 text-3xl font-bold" style={{color:c}}>{v}</div><p className="mt-2 text-sm text-slate-400">{s}</p><TinyLine color={c}/></Card>)}</div>
+      : <Card className="mt-4"><EmptyTableState message="选择 PCAP / PCAPNG 文件并启动综合检测后，系统将显示步骤日志、分类图表和候选分布" /></Card>}
+      {started && <div className="mt-4 grid grid-cols-6 gap-4">{[["VPN 置信度","94.8%","VPN 流量占比 43.4%",Globe2,palette.cyan],["SIM 置信度","89.4%","SIM 流量占比 39.1%",TableProperties,palette.purple],["应用分类 Top 3","Telegram","总计占比 79.6%",MessageCircle,palette.green],["行为分类 Top 3","加密通信","总计占比 84.1%",Eye,palette.blue],["群组匹配 Top 5","TG-8f3a...7c21","",Users,palette.cyan],["综合风险等级","高风险","风险评分 82 / 100",AlertTriangle,palette.red]].map(([t,v,s,Icon,c]) => <Card key={t}><div className="flex items-center gap-2 text-slate-400"><Icon size={18} style={{color:c}} />{t}</div><div className="mt-4 text-3xl font-bold" style={{color:c}}>{v}</div><p className="mt-2 text-sm text-slate-400">{s}</p><TinyLine color={c}/></Card>)}</div>}
       <p className="mt-5 text-center text-sm text-slate-500">注：检测结果仅供安全分析参考，请结合实际业务场景进行判定。</p>
     </PageShell>
   );
@@ -1132,7 +1227,7 @@ function BehaviorPage({ go }) {
     </PageShell>
   );
 }
-function RadarChart() { const labels=["chat","photo","file","voice","video","idle","unknown"]; const pts="150,35 190,90 215,145 165,190 120,175 75,145 95,85"; return <svg viewBox="0 0 300 250" className="h-[280px] w-full"><g transform="translate(0,10)">{[35,65,95,125].map((r,i)=><polygon key={r} points={labels.map((_,idx)=>`${150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*r},${120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*r}`).join(" ")} fill="none" stroke="rgba(148,163,184,.22)" />)}{labels.map((l,idx)=><g key={l}><line x1="150" y1="120" x2={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*125} y2={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*125} stroke="rgba(148,163,184,.15)"/><text x={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*142} y={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*142} fill="#cbd5e1" fontSize="13" textAnchor="middle">{l}</text></g>)}<polygon points={pts} fill="rgba(20,136,255,.35)" stroke="#1488ff" strokeWidth="2" /></g></svg>; }
+function RadarChart() { const labels=["chat","photo","file","voice","video","idle","unknown"]; const pts="150,35 190,90 215,145 165,190 120,175 75,145 95,85"; return <svg viewBox="0 0 300 250" className="tv-radar-chart h-[280px] w-full"><g transform="translate(0,10)">{[35,65,95,125].map((r,i)=><polygon key={r} points={labels.map((_,idx)=>`${150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*r},${120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*r}`).join(" ")} fill="none" stroke="rgba(148,163,184,.22)" />)}{labels.map((l,idx)=><g key={l}><line x1="150" y1="120" x2={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*125} y2={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*125} stroke="rgba(148,163,184,.15)"/><text x={150+Math.cos(-Math.PI/2+idx*2*Math.PI/7)*142} y={120+Math.sin(-Math.PI/2+idx*2*Math.PI/7)*142} fill="#cbd5e1" fontSize="13" textAnchor="middle">{l}</text></g>)}<polygon className="tv-radar-area" points={pts} fill="rgba(20,136,255,.35)" stroke="#1488ff" strokeWidth="2" /></g></svg>; }
 function SideChart({ title, color }) { return <div className="mt-5 rounded-xl border border-cyan-300/15 bg-slate-950/35 p-4"><PanelTitle title={title}/><TinyLine color={color}/><TinyLine color={color}/><TinyLine color={color}/></div>; }
 
 function GroupPage({ go }) {
@@ -1161,7 +1256,7 @@ function GroupPage({ go }) {
   );
 }
 function GaugeCircle({ value }) { return <div className="text-center"><Donut size={160} center={<><b className="text-3xl">{value}%</b></>} data={[{value,color:palette.blue},{value:100-value,color:palette.red}]} /><p className="text-sm text-slate-400">匹配概率</p></div>; }
-function RelationGraph({ selected, setSelected }) { const nodes=[ ["User_7a21",50,95,palette.blue], ["User_9c8f",50,170,palette.blue], ["User_b4f2",50,245,palette.blue], ["User_e3a7",50,320,palette.blue], ["Device_A1B2",180,80,palette.cyan], ["Device_C3D4",180,160,palette.cyan], ["Device_E5F6",180,240,palette.cyan], ["Device_G7H8",180,320,palette.cyan], ["Flow_f9a1",340,85,palette.purple], ["Flow_c2b3",340,165,palette.purple], ["Flow_a6c7",340,245,palette.purple], ["Flow_b8d9",340,325,palette.purple], ["Group_Alpha",520,90,"#f97316"], ["Group_Bravo",520,210,"#f97316"], ["Group_Delta",520,325,"#f97316"], ["Telegram",720,80,palette.green], ["WhatsApp",720,210,palette.green], ["Signal",720,330,palette.green] ]; return <svg viewBox="0 0 800 420" className="h-[420px] w-full rounded-xl bg-slate-950/25">{nodes.slice(0,12).map((n,i)=><line key={i} x1={n[1]+20} y1={n[2]} x2={nodes[(i+4)%12+4]?.[1]||520} y2={nodes[(i+4)%12+4]?.[2]||210} stroke="rgba(24,213,255,.35)" />)}{[[340,85,520,210],[340,165,520,210],[340,245,520,210],[340,325,520,210],[520,210,720,80],[520,210,720,210],[520,210,720,330],[520,90,720,80],[520,325,720,330]].map((l,i)=><line key={`m${i}`} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} stroke={i<4?"#fb923c":"#22c55e"} strokeDasharray="7 5" opacity=".8"/>)}{nodes.map(([t,x,y,c])=><g key={t} onClick={()=> t.includes("Group") && setSelected(t)} className="cursor-pointer"><circle cx={x} cy={y} r={t===selected?33:24} fill={c} opacity={t === selected ? 0.8 : 0.35} stroke={t===selected?"#fff":c} strokeWidth="2"/><text x={x} y={y+45} fill="#cbd5e1" fontSize="13" textAnchor="middle">{t}</text></g>)}</svg>; }
+function RelationGraph({ selected, setSelected }) { const nodes=[ ["User_7a21",50,95,palette.blue], ["User_9c8f",50,170,palette.blue], ["User_b4f2",50,245,palette.blue], ["User_e3a7",50,320,palette.blue], ["Device_A1B2",180,80,palette.cyan], ["Device_C3D4",180,160,palette.cyan], ["Device_E5F6",180,240,palette.cyan], ["Device_G7H8",180,320,palette.cyan], ["Flow_f9a1",340,85,palette.purple], ["Flow_c2b3",340,165,palette.purple], ["Flow_a6c7",340,245,palette.purple], ["Flow_b8d9",340,325,palette.purple], ["Group_Alpha",520,90,"#f97316"], ["Group_Bravo",520,210,"#f97316"], ["Group_Delta",520,325,"#f97316"], ["Telegram",720,80,palette.green], ["WhatsApp",720,210,palette.green], ["Signal",720,330,palette.green] ]; return <svg viewBox="0 0 800 420" className="tv-relation-graph h-[420px] w-full rounded-xl bg-slate-950/25">{nodes.slice(0,12).map((n,i)=><line className="tv-graph-link" key={i} x1={n[1]+20} y1={n[2]} x2={nodes[(i+4)%12+4]?.[1]||520} y2={nodes[(i+4)%12+4]?.[2]||210} stroke="rgba(24,213,255,.35)" />)}{[[340,85,520,210],[340,165,520,210],[340,245,520,210],[340,325,520,210],[520,210,720,80],[520,210,720,210],[520,210,720,330],[520,90,720,80],[520,325,720,330]].map((l,i)=><line className="tv-graph-link" key={`m${i}`} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} stroke={i<4?"#fb923c":"#22c55e"} strokeDasharray="7 5" opacity=".8"/>)}{nodes.map(([t,x,y,c],i)=><g key={t} onClick={()=> t.includes("Group") && setSelected(t)} className="tv-graph-node cursor-pointer" style={{ "--tv-chart-delay": `${i * 28}ms` }}><circle cx={x} cy={y} r={t===selected?33:24} fill={c} opacity={t === selected ? 0.8 : 0.35} stroke={t===selected?"#fff":c} strokeWidth="2"/><text x={x} y={y+45} fill="#cbd5e1" fontSize="13" textAnchor="middle">{t}</text></g>)}</svg>; }
 
 function ReportsPage({ selectedReport, setSelectedReport }) {
   const [fullscreen, setFullscreen] = useState(false);

@@ -541,6 +541,148 @@ select:focus {
   flex: 0 0 auto;
 }
 
+.tv-line-path,
+.tv-area-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.tv-line-path {
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+  animation: tvLineGrow 0.82s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tv-area-path {
+  stroke-dasharray: 1100;
+  stroke-dashoffset: 1100;
+  animation: tvAreaLineGrow 0.95s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tv-area-fill {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: tvAreaFillRise 0.72s cubic-bezier(.22, 1, .36, 1) 0.12s both;
+}
+
+.tv-area-marker {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tvNodePop 0.36s cubic-bezier(.22, 1, .36, 1) 0.55s both;
+}
+
+.tv-donut-segment {
+  animation: tvDonutGrow 0.78s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--tv-chart-delay, 0ms);
+}
+
+.tv-bar-fill {
+  transform-origin: bottom;
+  animation: tvBarGrowY 0.68s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--tv-chart-delay, 0ms);
+}
+
+.tv-progress-fill {
+  transform-origin: left;
+  animation: tvProgressGrowX 0.68s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tv-radar-area {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tvRadarGrow 0.72s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tv-graph-link {
+  stroke-dasharray: 760;
+  stroke-dashoffset: 760;
+  animation: tvGraphLineGrow 0.86s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tv-graph-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tvNodePop 0.42s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--tv-chart-delay, 0ms);
+}
+
+@keyframes tvLineGrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tvAreaLineGrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tvGraphLineGrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tvAreaFillRise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tvDonutGrow {
+  from {
+    stroke-dashoffset: var(--tv-donut-enter-offset);
+  }
+  to {
+    stroke-dashoffset: var(--tv-donut-offset);
+  }
+}
+
+@keyframes tvBarGrowY {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes tvProgressGrowX {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes tvRadarGrow {
+  from {
+    opacity: 0;
+    transform: scale(.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tvNodePop {
+  from {
+    opacity: 0;
+    transform: scale(.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .tv-switch span {
   box-shadow: 0 1px 8px rgba(0, 0, 0, .25);
 }
