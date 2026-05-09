@@ -12,19 +12,19 @@ const loginSignals = [
 ];
 
 export function LoginPage() {
-  const [account, setAccount] = useState("admin");
-  const [password, setPassword] = useState("123456");
+  const [account, setAccount] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const login = useAuthStore((state) => state.login);
   const setToast = useUiStore((state) => state.setToast);
   const navigate = useNavigate();
 
-  const submit = (event: FormEvent, demo = false) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
-    const passed = login(demo ? "admin" : account, demo ? "123456" : password);
+    const passed = login(account, password);
     if (!passed) {
-      setError("账号或密码错误");
+      setError("账号需为 4-20 位字母、数字或下划线；密码需为 6-32 位且不包含空格");
       return;
     }
     if (remember) localStorage.setItem("trafficvigil-remember", account);
@@ -66,7 +66,6 @@ export function LoginPage() {
           <label className="check-row"><input name="remember-login" aria-label="记住登录" type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} />记住登录</label>
           {error && <div className="error-toast">{error}</div>}
           <button className="primary-button">登录系统<ArrowRight size={18} /></button>
-          <button className="secondary-button" type="button" onClick={(event) => submit(event as unknown as FormEvent, true)}>演示账号进入<UserRound size={17} /></button>
         </form>
         <div className="auth-signal-grid">
           {loginSignals.map(({ label, value, icon: Icon }) => (

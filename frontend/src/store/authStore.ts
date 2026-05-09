@@ -10,6 +10,11 @@ type AuthStore = {
 
 const saved = localStorage.getItem("trafficvigil-user");
 
+function isValidLogin(username: string, password: string): boolean {
+  const name = username.trim();
+  return /^[A-Za-z0-9_]{4,20}$/.test(name) && password.length >= 6 && password.length <= 32 && !/\s/.test(password);
+}
+
 function makeUser(username: string, organization = "计算机设计大赛项目组", role: UserRole = "管理员"): UserSession {
   return {
     userId: `TVU-${Math.floor(100000 + Math.random() * 899999)}`,
@@ -24,8 +29,8 @@ function makeUser(username: string, organization = "计算机设计大赛项目�
 export const useAuthStore = create<AuthStore>((set) => ({
   user: saved ? (JSON.parse(saved) as UserSession) : null,
   login: (username, password, role = "管理员") => {
-    if (username !== "admin" || password !== "123456") return false;
-    const user = makeUser(username, "密网巡哨运行中心", role);
+    if (!isValidLogin(username, password)) return false;
+    const user = makeUser(username.trim(), "密网巡哨运行中心", role);
     localStorage.setItem("trafficvigil-user", JSON.stringify(user));
     set({ user });
     return true;
